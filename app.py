@@ -150,6 +150,9 @@ def dashboard():
             if all(a.status == 'Absent' for a in last_3):
                 absence_alerts.append(s)
 
+    # Current Nepali Date String
+    current_nepali_date = today_bs.strftime('%d %B %Y, %A')
+
     return render_template('dashboard.html', 
                            student_count=student_count, 
                            class_count=class_count,
@@ -159,7 +162,8 @@ def dashboard():
                            analytics_labels=analytics_labels,
                            income_data=income_data,
                            expense_data=expense_data,
-                           absence_alerts=absence_alerts)
+                           absence_alerts=absence_alerts,
+                           current_nepali_date=current_nepali_date)
 
 if __name__ == '__main__':
     if not os.path.exists('dance_academy.db') or not os.path.exists('instance/dance_academy.db'):
