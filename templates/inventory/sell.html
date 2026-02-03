@@ -35,10 +35,24 @@
                 <input type="number" name="quantity" id="quantity" value="1" min="1" required onchange="updatePrice()">
             </div>
             <div>
+                <!-- Discount Toggle -->
+                <div style="margin-bottom: 0.5rem;">
+                    <label
+                        style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--primary);">
+                        <input type="checkbox" id="use_discount" onchange="toggleDiscountMode()">
+                        Apply Percentage Discount?
+                    </label>
+                </div>
+
+                <!-- Discount Input (Hidden by default) -->
+                <div id="discount_div" style="display: none; margin-bottom: 0.5rem;">
+                    <input type="number" id="discount_percent" placeholder="Enter % (e.g. 20)" min="0" max="100"
+                        oninput="updatePrice()">
+                </div>
+
                 <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Final Total Price
                     (Rs)</label>
-                <input type="number" name="price_sold" id="price_sold" required step="10">
-                <small style="color: var(--text-muted);">Adjust this if applying a discount.</small>
+                <input type="number" name="price_sold" id="price_sold" required step="1">
             </div>
         </div>
 
@@ -51,15 +65,46 @@
 </div>
 
 <script>
+    function toggleDiscountMode() {
+        const useDiscount = document.getElementById('use_discount').checked;
+        const discountDiv = document.getElementById('discount_div');
+        const priceInput = document.getElementById('price_sold');
+
+        if (useDiscount) {
+            discountDiv.style.display = 'block';
+            priceInput.readOnly = true;
+            priceInput.style.background = 'rgba(255,255,255,0.05)';
+        } else {
+            discountDiv.style.display = 'none';
+            priceInput.readOnly = false;
+            priceInput.style.background = 'transparent';
+        }
+        updatePrice();
+    }
+
     function updatePrice() {
         const select = document.getElementById('product_id');
         const quantity = document.getElementById('quantity').value;
         const priceInput = document.getElementById('price_sold');
+        const useDiscount = document.getElementById('use_discount').checked;
+        const discountPercent = document.getElementById('discount_percent').value;
 
         const selectedOption = select.options[select.selectedIndex];
+
         if (selectedOption.value) {
             const basePrice = parseFloat(selectedOption.getAttribute('data-price'));
-            priceInput.value = basePrice * quantity;
+            let total = basePrice * quantity;
+
+            if (useDiscount && discountPercent) {
+                total = total - (total * (discountPercent / 100));
+            }
+
+            // Only auto-update if we are in discount mode OR if it's a fresh selection (implied by this function running on change)
+            // However, in "Manual Mode" (unchecked), user might want to edit it. 
+            // Current Logic: If Unchecked, it resets to Base * Qty immediately when this runs (e.g. qty change).
+            // This is acceptable behavior. If they want custom manual price, they edit it AFTER setting quantity.
+
+            priceInput.value = Math.round(total);
         }
     }
 </script>
