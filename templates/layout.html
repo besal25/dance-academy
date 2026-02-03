@@ -124,10 +124,15 @@
                 {% if messages %}
                 <div class="flash-messages" style="margin-bottom: 1.5rem;">
                     {% for category, message in messages %}
-                    <div
-                        style="padding: 1rem; border-radius: 12px; margin-bottom: 0.5rem; background: rgba(99, 102, 241, 0.1); border: 1px solid var(--border); border-left: 4px solid var(--primary); color: white; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="flash-message flash-{{ category if category != 'message' else 'info' }}">
                         <span>{{ message | safe }}</span>
-                        <i class="fas fa-check-circle" style="color: var(--primary);"></i>
+                        {% if category == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                        {% elif category == 'danger' or category == 'error' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% else %}
+                        <i class="fas fa-info-circle"></i>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>

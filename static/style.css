@@ -441,3 +441,47 @@ input:focus {
     z-index: 10;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* Flash Messages */
+.flash-message {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    border: 1px solid transparent;
+    border-left-width: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 500;
+}
+
+.flash-success {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(52, 211, 153, 0.3);
+    border-left-color: #34d399;
+    color: #34d399;
+}
+
+.flash-danger,
+.flash-error {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(248, 113, 113, 0.3);
+    border-left-color: #f87171;
+    color: #f87171;
+}
+
+.flash-warning {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: rgba(251, 191, 36, 0.3);
+    border-left-color: #f59e0b;
+    color: #f59e0b;
+}
+
+.flash-info,
+.flash-message {
+    /* Default fallback */
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+    border-left-color: var(--primary);
+    color: var(--primary);
+}
