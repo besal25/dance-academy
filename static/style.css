@@ -11,6 +11,24 @@
     --font-main: 'Outfit', sans-serif;
 }
 
+[data-theme="light"] {
+    --bg-dark: #f1f5f9;
+    /* Light Gray Background */
+    --bg-card: #ffffff;
+    /* White Cards */
+    --primary: #4f46e5;
+    /* Slightly darker indigo for contrast */
+    --primary-glow: rgba(79, 70, 229, 0.4);
+    --secondary: #db2777;
+    --text-main: #0f172a;
+    /* Dark Text */
+    --text-muted: #64748b;
+    /* Slate Gray */
+    --border: #e2e8f0;
+    /* Light Border */
+    --glass: rgba(255, 255, 255, 0.9);
+}
+
 * {
     margin: 0;
     padding: 0;
