@@ -3,109 +3,224 @@
 {% block title %}New Sale{% endblock %}
 
 {% block content %}
-<div class="glass-card" style="max-width: 600px; margin: 0 auto;">
-    <h3 style="margin-top: 0; color: var(--primary);">Record Clothing Sale</h3>
-
-    <form method="post" style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <div>
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Select Product</label>
-            <select name="product_id" id="product_id" required onchange="updatePrice()">
-                <option value="">-- Choose Product --</option>
-                {% for p in products %}
-                <option value="{{ p.id }}" data-price="{{ p.price }}" data-stock="{{ p.stock }}">
-                    {{ p.name }} (Rs {{ p.price }}) - Stock: {{ p.stock }}
-                </option>
-                {% endfor %}
-            </select>
+<div class="glass-card" style="max-width: 900px; margin: 0 auto;">
+    <div
+        style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+        <div
+            style="width: 50px; height: 50px; background: rgba(99, 102, 241, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.5rem;">
+            <i class="fas fa-cash-register"></i>
         </div>
-
         <div>
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Select Student</label>
-            <select name="student_id" required>
-                <option value="">-- Choose Student --</option>
-                {% for s in students %}
-                <option value="{{ s.id }}">{{ s.name }} ({{ s.phone }})</option>
-                {% endfor %}
-            </select>
+            <h2 style="margin: 0; font-size: 1.5rem;">New Sale</h2>
+            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Process a new inventory sale.</p>
         </div>
+    </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Quantity</label>
-                <input type="number" name="quantity" id="quantity" value="1" min="1" required onchange="updatePrice()">
+    <form method="post" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: start;">
+
+        <!-- LEFT: Inputs -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+            <!-- Student Selector -->
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 500;">
+                    <i class="fas fa-user-graduate" style="margin-right: 0.5rem; color: var(--primary);"></i> Student
+                </label>
+                <select name="student_id" required style="padding: 1rem; border-radius: 12px; font-size: 1rem;">
+                    <option value="">-- Select Student --</option>
+                    {% for s in students %}
+                    <option value="{{ s.id }}">{{ s.name }} ({{ s.phone }})</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div>
-                <!-- Discount Toggle -->
-                <div style="margin-bottom: 0.5rem;">
-                    <label
-                        style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--primary);">
-                        <input type="checkbox" id="use_discount" onchange="toggleDiscountMode()">
-                        Apply Percentage Discount?
+
+            <!-- Product Selector -->
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 500;">
+                    <i class="fas fa-tshirt" style="margin-right: 0.5rem; color: var(--secondary);"></i> Product
+                </label>
+                <select name="product_id" id="product_id" required onchange="updateReceipt()"
+                    style="padding: 1rem; border-radius: 12px; font-size: 1rem;">
+                    <option value="">-- Select Item --</option>
+                    {% for p in products %}
+                    <option value="{{ p.id }}" data-price="{{ p.price }}" data-stock="{{ p.stock }}"
+                        data-name="{{ p.name }}">
+                        {{ p.name }} — Rs {{ p.price }} (Stock: {{ p.stock }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Quantity -->
+            <div class="form-group">
+                <label
+                    style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-weight: 500;">Quantity</label>
+                <input type="number" name="quantity" id="quantity" value="1" min="1" required onchange="updateReceipt()"
+                    oninput="updateReceipt()"
+                    style="padding: 1rem; border-radius: 12px; font-size: 1rem; font-weight: 600;">
+            </div>
+
+            <!-- Discount Section -->
+            <div class="glass-card" style="padding: 1rem; background: rgba(255, 255, 255, 0.03);">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.8rem; font-weight: 500;">
+                        <input type="checkbox" id="use_discount" onchange="toggleDiscount()"
+                            style="width: 1.2rem; height: 1.2rem;">
+                        Apply Discount?
                     </label>
+                    <div id="discount_input_container" style="display: none; width: 120px;">
+                        <input type="number" id="discount_percent" placeholder="%" min="0" max="100"
+                            oninput="updateReceipt()" style="text-align: center; padding: 0.5rem;">
+                    </div>
                 </div>
-
-                <!-- Discount Input (Hidden by default) -->
-                <div id="discount_div" style="display: none; margin-bottom: 0.5rem;">
-                    <input type="number" id="discount_percent" placeholder="Enter % (e.g. 20)" min="0" max="100"
-                        oninput="updatePrice()">
-                </div>
-
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Final Total Price
-                    (Rs)</label>
-                <input type="number" name="price_sold" id="price_sold" required step="1">
             </div>
+
         </div>
 
-        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <button type="submit" class="btn-primary">Complete Sale</button>
+        <!-- RIGHT: Receipt Summary -->
+        <div class="glass-card"
+            style="background: var(--bg-dark); border: 1px solid var(--border); position: relative; overflow: hidden;">
+            <div
+                style="text-align: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px dashed var(--border);">
+                <h4 style="margin: 0; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted);">Receipt
+                    Summary</h4>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.95rem;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Item</span>
+                    <span id="receipt-item-name" style="font-weight: 600;">-</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Unit Price</span>
+                    <span id="receipt-unit-price">Rs 0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Quantity</span>
+                    <span id="receipt-qty">0</span>
+                </div>
+                <div style="height: 1px; background: var(--border); margin: 0.5rem 0;"></div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Subtotal</span>
+                    <span id="receipt-subtotal">Rs 0</span>
+                </div>
+                <div id="receipt-discount-row"
+                    style="display: flex; justify-content: space-between; color: var(--secondary); display: none;">
+                    <span>Discount (<span id="receipt-discount-percent">0</span>%)</span>
+                    <span id="receipt-discount-amount">- Rs 0</span>
+                </div>
+            </div>
+
+            <div
+                style="margin-top: 2rem; padding-top: 1rem; border-top: 2px dashed var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1.1rem; font-weight: 600;">TOTAL</span>
+                <span id="receipt-total" style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">Rs 0</span>
+            </div>
+
+            <!-- Hidden Input for Form Submission -->
+            <input type="hidden" name="price_sold" id="final_price_input">
+
+            <button type="submit" class="btn-primary"
+                style="width: 100%; margin-top: 2rem; padding: 1rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                <i class="fas fa-check"></i> Confirm Sale
+            </button>
+
             <a href="{{ url_for('inventory.index') }}"
-                style="padding: 0.8rem 1.5rem; color: var(--text-muted); text-decoration: none;">Cancel</a>
+                style="display: block; text-align: center; margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none;">Cancel</a>
         </div>
+
     </form>
 </div>
 
 <script>
-    function toggleDiscountMode() {
-        const useDiscount = document.getElementById('use_discount').checked;
-        const discountDiv = document.getElementById('discount_div');
-        const priceInput = document.getElementById('price_sold');
+    function toggleDiscount() {
+        const checkbox = document.getElementById('use_discount');
+        const container = document.getElementById('discount_input_container');
+        const discountRow = document.getElementById('receipt-discount-row');
 
-        if (useDiscount) {
-            discountDiv.style.display = 'block';
-            priceInput.readOnly = true;
-            priceInput.style.background = 'rgba(255,255,255,0.05)';
+        container.style.display = checkbox.checked ? 'block' : 'none';
+        discountRow.style.display = checkbox.checked ? 'flex' : 'none';
+
+        // Auto focus if showing
+        if (checkbox.checked) {
+            document.getElementById('discount_percent').focus();
         } else {
-            discountDiv.style.display = 'none';
-            priceInput.readOnly = false;
-            priceInput.style.background = 'transparent';
+            document.getElementById('discount_percent').value = ''; // Reset
         }
-        updatePrice();
+
+        updateReceipt();
     }
 
-    function updatePrice() {
-        const select = document.getElementById('product_id');
-        const quantity = document.getElementById('quantity').value;
-        const priceInput = document.getElementById('price_sold');
-        const useDiscount = document.getElementById('use_discount').checked;
-        const discountPercent = document.getElementById('discount_percent').value;
+    function updateReceipt() {
+        // Inputs
+        const productSelect = document.getElementById('product_id');
+        const qtyInput = document.getElementById('quantity');
+        const discountCheckbox = document.getElementById('use_discount');
+        const discountInput = document.getElementById('discount_percent');
 
-        const selectedOption = select.options[select.selectedIndex];
+        // Outputs
+        const rName = document.getElementById('receipt-item-name');
+        const rUnit = document.getElementById('receipt-unit-price');
+        const rQty = document.getElementById('receipt-qty');
+        const rSub = document.getElementById('receipt-subtotal');
+        const rDiscRow = document.getElementById('receipt-discount-row');
+        const rDiscPercent = document.getElementById('receipt-discount-percent');
+        const rDiscAmt = document.getElementById('receipt-discount-amount');
+        const rTotal = document.getElementById('receipt-total');
+        const finalInput = document.getElementById('final_price_input');
 
-        if (selectedOption.value) {
-            const basePrice = parseFloat(selectedOption.getAttribute('data-price'));
-            let total = basePrice * quantity;
+        // Logic
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
 
-            if (useDiscount && discountPercent) {
-                total = total - (total * (discountPercent / 100));
-            }
-
-            // Only auto-update if we are in discount mode OR if it's a fresh selection (implied by this function running on change)
-            // However, in "Manual Mode" (unchecked), user might want to edit it. 
-            // Current Logic: If Unchecked, it resets to Base * Qty immediately when this runs (e.g. qty change).
-            // This is acceptable behavior. If they want custom manual price, they edit it AFTER setting quantity.
-
-            priceInput.value = Math.round(total);
+        if (!selectedOption.value) {
+            // Reset if no product
+            rName.innerText = "-";
+            rUnit.innerText = "Rs 0";
+            rQty.innerText = "0";
+            rSub.innerText = "Rs 0";
+            rTotal.innerText = "Rs 0";
+            finalInput.value = "";
+            return;
         }
+
+        const price = parseFloat(selectedOption.getAttribute('data-price'));
+        const name = selectedOption.getAttribute('data-name');
+        const qty = parseInt(qtyInput.value) || 0;
+
+        const subtotal = price * qty;
+        let total = subtotal;
+
+        // Update Basic Info
+        rName.innerText = name;
+        rUnit.innerText = "Rs " + price;
+        rQty.innerText = qty;
+        rSub.innerText = "Rs " + subtotal.toFixed(0);
+
+        // Calculate Discount
+        if (discountCheckbox.checked) {
+            const percent = parseFloat(discountInput.value) || 0;
+            const discountAmount = subtotal * (percent / 100);
+            total = subtotal - discountAmount;
+
+            rDiscRow.style.display = 'flex';
+            rDiscPercent.innerText = percent;
+            rDiscAmt.innerText = "- Rs " + discountAmount.toFixed(0);
+        } else {
+            rDiscRow.style.display = 'none';
+        }
+
+        // Final Total
+        rTotal.innerText = "Rs " + Math.round(total).toLocaleString();
+        finalInput.value = Math.round(total);
     }
 </script>
+
+<!-- Responsive CSS adjustments specific to this page -->
+<style>
+    @media (max-width: 768px) {
+        form {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
 {% endblock %}
