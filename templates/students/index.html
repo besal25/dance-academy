@@ -15,9 +15,9 @@
             <form method="post" action="{{ url_for('students.delete_all') }}" style="display: inline;"
                 onsubmit="return confirm('⚠️ DANGER: This will permanently delete ALL students and ALL related records (ledger, attendance, packages, workshops, etc.).\n\nType DELETE in the next prompt to confirm.') && prompt('Type DELETE to confirm:') === 'DELETE';">
                 <button type="submit" class="btn-icon"
-                    style="background: #dc2626; color: white; padding: 0.8rem 1.2rem; border-radius: 8px;"
+                    style="background: #dc2626; color: white; padding: 0.8rem 1.2rem; border-radius: 8px; width: auto; height: auto;"
                     title="Delete All Students">
-                    <i class="fas fa-trash-alt"></i>
+                    <i class="fas fa-trash-alt"></i> Delete All Students
                 </button>
             </form>
             {% endif %}
