@@ -345,3 +345,39 @@ input:focus {
     border-radius: 50%;
     border: 1px solid var(--bg-dark);
 }
+
+/* Scrollable Table Wrapper */
+.table-scroll-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 600px;
+    border-radius: 12px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #4f46e5;
+}
+
+/* Sticky table header */
+.table-scroll-wrapper table thead {
+    position: sticky;
+    top: 0;
+    background: var(--bg-card);
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
