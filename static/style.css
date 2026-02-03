@@ -227,12 +227,25 @@ input,
 select {
     background: var(--bg-dark);
     border: 1px solid var(--border);
-    color: white;
+    color: var(--text-main);
+    /* Changed from white to variable */
     padding: 0.8rem;
     border-radius: 8px;
     width: 100%;
     outline: none;
     font-family: inherit;
+}
+
+/* Ensure placeholder text is visible but muted */
+::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+/* Fix dropdown options in light mode */
+select {
+    color: var(--text-main);
+    background-color: var(--bg-dark);
 }
 
 option {
