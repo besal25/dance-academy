@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block title %}Academy Settings{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 700px; margin: 0 auto;">
+    <h2 style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+        <i class="fas fa-cog"></i> Academy Branding & Settings
+    </h2>
+
+    <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Current Logo</label>
+                <div
+                    style="width: 150px; height: 150px; background: rgba(0,0,0,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); overflow: hidden;">
+                    {% if settings.logo_path %}
+                    <img src="{{ url_for('static', filename=settings.logo_path) }}"
+                        style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                    {% else %}
+                    <span style="color: var(--text-muted); font-size: 0.8rem;">No Logo Uploaded</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Upload New Logo</label>
+                <input type="file" name="logo" accept="image/*"
+                    style="padding: 0.5rem; border: none; background: transparent;">
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">Square images (PNG/JPG)
+                    work best.</p>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Academy Name</label>
+            <input type="text" name="academy_name" value="{{ settings.academy_name }}" required
+                placeholder="e.g., Star Dance Studio">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Contact Number</label>
+                <input type="text" name="contact" value="{{ settings.contact }}" placeholder="e.g., +977 98xxxxxxx">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Address</label>
+                <input type="text" name="address" value="{{ settings.address }}" placeholder="e.g., Kathmandu, Nepal">
+            </div>
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Default Admission Fee
+                (Rs)</label>
+            <input type="number" name="default_admission_fee" value="{{ settings.default_admission_fee }}" required
+                step="100">
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">This amount will be charged
+                automatically for new "Normal" admissions.</p>
+        </div>
+
+        <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            <button type="submit" class="btn-primary" style="width: 100%;">Save All Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

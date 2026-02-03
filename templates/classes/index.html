@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+
+{% block title %}Classes & Instructors{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+
+    <!-- Left Column: Classes List -->
+    <div>
+        <div class="glass-card">
+            <h2 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">Active
+                Classes</h2>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+                {% for cls in classes %}
+                <div
+                    style="background: var(--bg-dark); padding: 1rem; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">{{ cls.name }}</h3>
+                        <a href="{{ url_for('classes.delete_class', id=cls.id) }}" style="color: #ef4444;"><i
+                                class="fas fa-trash"></i></a>
+                    </div>
+
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        <i class="fas fa-clock"></i> {{ cls.schedule }}
+                    </p>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; font-size: 0.85rem;">
+                        <span
+                            style="background: rgba(99, 102, 241, 0.2); color: var(--primary); padding: 2px 8px; border-radius: 6px;">
+                            {{ cls.instructor.name if cls.instructor else 'No Instructor' }}
+                        </span>
+                        <span style="color: var(--text-muted);">
+                            <i class="fas fa-users"></i> {{ cls.enrollments|length }} / {{ cls.capacity if cls.capacity
+                            else '∞' }}
+                        </span>
+                    </div>
+
+                    <!-- Enrolled Students List -->
+                    <div style="margin-top: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px; padding: 0.5rem;">
+                        <h4
+                            style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">
+                            Enrolled Students</h4>
+                        <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.8rem;">
+                            {% for enr in cls.enrollments %}
+                            <li style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+                                <span>{{ enr.student.name }}</span>
+                                <a href="{{ url_for('classes.unenroll_student', enrollment_id=enr.id) }}"
+                                    style="color: #ef4444; opacity: 0.5;" title="Unenroll"><i
+                                        class="fas fa-times-circle"></i></a>
+                            </li>
+                            {% else %}
+                            <li style="color: var(--text-muted); font-size: 0.75rem; font-style: italic;">No students
+                                enrolled yet.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted);">No classes scheduled yet.</p>
+                {% endfor %}
+            </div>
+
+            <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 2rem;">
+                <!-- Add Class Form -->
+                <div>
+                    <h3 style="margin-bottom: 1rem;">Schedule New Class</h3>
+                    <form action="{{ url_for('classes.add_class') }}" method="post" style="display: grid; gap: 1rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <input type="text" name="name" placeholder="Class Name (e.g., Jazz Batch A)" required>
+                            <select name="instructor_id">
+                                <option value="">-- Select Instructor --</option>
+                                {% for inst in instructors %}
+                                <option value="{{ inst.id }}">{{ inst.name }} ({{ inst.specialty }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                            <input type="text" name="schedule" placeholder="Schedule (e.g., Mon, Wed 5PM)" required>
+                            <input type="number" name="capacity" placeholder="Capacity (Optional)">
+                        </div>
+                        <button type="submit" class="btn-primary">Create Class</button>
+                    </form>
+                </div>
+
+                <!-- Enroll Student Form -->
+                <div
+                    style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid var(--border);">
+                    <h3 style="margin-bottom: 1rem;">Enroll Student</h3>
+                    <form action="{{ url_for('classes.enroll_student') }}" method="post"
+                        style="display: grid; gap: 1rem;">
+                        <label style="font-size: 0.85rem; color: var(--text-muted);">Select Student</label>
+                        <select name="student_id" required>
+                            <option value="">-- Choose Student --</option>
+                            {% for s in students %}
+                            <option value="{{ s.id }}">{{ s.name }} ({{ s.phone }})</option>
+                            {% endfor %}
+                        </select>
+
+                        <label style="font-size: 0.85rem; color: var(--text-muted);">Select Class</label>
+                        <select name="class_id" required>
+                            <option value="">-- Choose Class --</option>
+                            {% for c in classes %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="submit" class="btn-primary" style="background: var(--primary);">Enroll
+                            Student</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Instructors -->
+    <div>
+        <div class="glass-card">
+            <h2 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">Instructors
+            </h2>
+
+            <ul style="list-style: none; margin-bottom: 2rem;">
+                {% for inst in instructors %}
+                <li style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center;">
+                    <div class="avatar" style="width: 35px; height: 35px; font-size: 0.8rem;">{{ inst.name[0] }}</div>
+                    <div>
+                        <div style="font-weight: 500;">{{ inst.name }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ inst.specialty }}</div>
+                    </div>
+                    <a href="{{ url_for('classes.delete_instructor', id=inst.id) }}"
+                        style="margin-left: auto; color: #ef4444; opacity: 0.7; transition: opacity 0.2s;"
+                        onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7"
+                        onclick="return confirm('Delete instructor {{ inst.name }}?');">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li style="color: var(--text-muted);">No instructors added.</li>
+                {% endfor %}
+            </ul>
+
+            <!-- Add Instructor Form -->
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Add Instructor</h3>
+            <form action="{{ url_for('classes.add_instructor') }}" method="post" style="display: grid; gap: 0.8rem;">
+                <input type="text" name="name" placeholder="Name" required>
+                <input type="text" name="phone" placeholder="Phone" required>
+                <input type="text" name="specialty" placeholder="Specialty (e.g., Ballet)">
+                <button type="submit" class="btn-primary" style="font-size: 0.9rem;">Add Instructor</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

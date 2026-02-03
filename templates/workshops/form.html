@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ 'Edit Workshop' if workshop else 'New Workshop' }}{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+    <form method="post" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Workshop Name</label>
+            <input type="text" name="name" value="{{ workshop.name if workshop else '' }}" required
+                placeholder="e.g. Contemporary Masterclass">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Start Date (BS)</label>
+                <input type="text" name="start_date" class="nepali-date-picker"
+                    value="{{ workshop.start_date if workshop else '' }}" required placeholder="YYYY-MM-DD">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">End Date (BS)</label>
+                <input type="text" name="end_date" class="nepali-date-picker"
+                    value="{{ workshop.end_date if workshop else '' }}" required placeholder="YYYY-MM-DD">
+            </div>
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Fee (Rs)</label>
+            <input type="number" name="fee" value="{{ workshop.fee if workshop else '' }}" required step="100"
+                placeholder="e.g. 1500">
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Description</label>
+            <textarea name="description" rows="4"
+                placeholder="Brief details about the workshop...">{{ workshop.description if workshop else '' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn-primary">{{ 'Update Workshop' if workshop else 'Create Workshop'
+                }}</button>
+            <a href="{{ url_for('workshops.index') }}"
+                style="padding: 0.8rem 1.5rem; color: var(--text-muted); text-decoration: none;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

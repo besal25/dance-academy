@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}Inventory & Shop{% endblock %}
+
+{% block content %}
+<div class="glass-card"
+    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h3 style="margin: 0;">Academy Shop</h3>
+        <p style="color: var(--text-muted); margin: 0;">Manage products and track clothing sales</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <a href="{{ url_for('inventory.sell') }}" class="btn-primary">
+            <i class="fas fa-shopping-cart"></i> New Sale
+        </a>
+        {% if current_user.role == 'Admin' %}
+        <a href="{{ url_for('inventory.add') }}" class="btn-primary"
+            style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--primary); color: var(--primary);">
+            <i class="fas fa-plus"></i> Add Product
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+    <!-- Product List -->
+    <div class="glass-card">
+        <h3 style="margin-top: 0;">Products in Stock</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid var(--border);">
+                    <th style="padding: 1rem;">Product Name</th>
+                    <th style="padding: 1rem;">Price</th>
+                    <th style="padding: 1rem;">Stock</th>
+                    <th style="padding: 1rem; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem; font-weight: 500;">{{ p.name }}</td>
+                    <td style="padding: 1rem;">Rs {{ p.price }}</td>
+                    <td style="padding: 1rem;">
+                        <span class="badge"
+                            style="{{ 'background: rgba(239, 68, 68, 0.1); color: #ef4444;' if p.stock < 5 else 'background: rgba(52, 211, 153, 0.1); color: #34d399;' }}">
+                            {{ p.stock }} units
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; text-align: right;">
+                        {% if current_user.role == 'Admin' %}
+                        <a href="{{ url_for('inventory.edit', id=p.id) }}" class="btn-icon" title="Edit"><i
+                                class="fas fa-edit"></i></a>
+                        <a href="{{ url_for('inventory.delete', id=p.id) }}" class="btn-icon" style="color: #ef4444;"
+                            onclick="return confirm('Delete this product?');"><i class="fas fa-trash"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">No products
+                        found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Sales -->
+    <div class="glass-card">
+        <h3 style="margin-top: 0;">Recent Sales</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for sale in sales %}
+            <div
+                style="padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 600;">{{ sale.product.name }}</span>
+                    <span style="color: var(--primary);">Rs {{ sale.price_sold }}</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    <div><i class="fas fa-user"></i> {{ sale.student.name }}</div>
+                    <div><i class="fas fa-calendar"></i> {{ sale.date }} (Qty: {{ sale.quantity }})</div>
+                </div>
+            </div>
+            {% else %}
+            <p style="text-align: center; color: var(--text-muted); padding: 2rem;">No sales records.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js for Analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 2rem;">
+    <!-- Welcome Banner with Stats -->
+    <div
+        style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); padding: 2rem; border-radius: 16px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);">
+        <div>
+            <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Welcome back, Admin</h2>
+            <p style="opacity: 0.9;">Here's what's happening at the academy today.</p>
+        </div>
+        <div style="display: flex; gap: 3rem; text-align: center;">
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 700;">{{ student_count }}</div>
+                <div style="font-size: 0.9rem; opacity: 0.8;">Active Students</div>
+            </div>
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 700;">{{ class_count }}</div>
+                <div style="font-size: 0.9rem; opacity: 0.8;">Active Classes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Grid -->
+    <h3 style="color: var(--text-muted);">Quick Actions</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
+
+        <a href="{{ url_for('students.add') }}" class="glass-card"
+            style="text-decoration: none; color: var(--text-main); transition: transform 0.2s; display: flex; flex-direction: column; align-items: start; gap: 1rem;">
+            <div
+                style="width: 50px; height: 50px; background: rgba(52, 211, 153, 0.2); color: #34d399; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div>
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.3rem;">New Admission</h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Register a new student</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('attendance.index') }}" class="glass-card"
+            style="text-decoration: none; color: var(--text-main); transition: transform 0.2s; display: flex; flex-direction: column; align-items: start; gap: 1rem;">
+            <div
+                style="width: 50px; height: 50px; background: rgba(244, 63, 94, 0.2); color: #f43f5e; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div>
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.3rem;">Mark Attendance</h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Daily class check-in</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('expenses.index') }}" class="glass-card"
+            style="text-decoration: none; color: var(--text-main); transition: transform 0.2s; display: flex; flex-direction: column; align-items: start; gap: 1rem;">
+            <div
+                style="width: 50px; height: 50px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div>
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.3rem;">Expenses</h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Track spending</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('finance.index') }}" class="glass-card"
+            style="text-decoration: none; color: var(--text-main); transition: transform 0.2s; display: flex; flex-direction: column; align-items: start; gap: 1rem;">
+            <div
+                style="width: 50px; height: 50px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div>
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.3rem;">Fees & Ledger</h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Manage payments</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('reports.index') }}" class="glass-card"
+            style="text-decoration: none; color: var(--text-main); transition: transform 0.2s; display: flex; flex-direction: column; align-items: start; gap: 1rem;">
+            <div
+                style="width: 50px; height: 50px; background: rgba(99, 102, 241, 0.2); color: #6366f1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <div>
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.3rem;">View Reports</h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Income & Defaulters</p>
+            </div>
+        </a>
+
+    </div>
+
+    <!-- Widgets Row -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+        <!-- Today's Schedule -->
+        <div class="glass-card">
+            <h3 style="margin-bottom: 1rem; color: #a855f7;"><i class="far fa-calendar-alt"></i> Today's Schedule</h3>
+            {% if todays_classes %}
+            <ul style="list-style: none; padding: 0;">
+                {% for cls in todays_classes %}
+                <li
+                    style="padding: 0.8rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;">
+                    <span style="font-weight: 500;">{{ cls.name }}</span>
+                    <span style="color: var(--text-muted);">{{ cls.schedule }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 1rem;">No classes scheduled for today.</p>
+            {% endif %}
+        </div>
+
+        <!-- Upcoming Birthdays -->
+        <div class="glass-card">
+            <h3 style="margin-bottom: 1rem; color: #f43f5e;"><i class="fas fa-birthday-cake"></i> Upcoming Birthdays (30
+                Days)</h3>
+            {% if birthdays %}
+            <ul style="list-style: none; padding: 0;">
+                {% for student in birthdays %}
+                <li
+                    style="padding: 0.8rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;">
+                    <span style="font-weight: 500;">{{ student.name }}</span>
+                    <span style="color: var(--text-muted);">{{ student.dob }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 1rem;">No upcoming birthdays.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Smart Alerts Row -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <!-- Absence Alerts -->
+        <div class="glass-card" style="border-left: 4px solid #ef4444;">
+            <h3 style="margin-bottom: 1rem; color: #ef4444;"><i class="fas fa-user-clock"></i> Attendance Caution</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Absent for 3+ consecutive
+                classes</p>
+
+            {% if absence_alerts %}
+            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                {% for s in absence_alerts %}
+                <div
+                    style="background: rgba(239, 68, 68, 0.05); padding: 0.8rem; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600;">{{ s.name }}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ s.phone }}</div>
+                    </div>
+                    {% set absence_msg = "Namaste, we noticed " ~ s.name ~ " has missed 3 classes. Is everything okay?
+                    Hope to see them back soon!" %}
+                    <a href="https://wa.me/{{ s.phone }}?text={{ absence_msg|urlencode }}" target="_blank"
+                        style="color: #25D366; font-size: 1.2rem;" title="Check-in via WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-style: italic; font-size: 0.9rem;">All active students are
+                attending regularly!</p>
+            {% endif %}
+        </div>
+
+        <!-- High Due Reminders -->
+        <div class="glass-card" style="border-left: 4px solid #f59e0b;">
+            <h3 style="margin-bottom: 1rem; color: #f59e0b;"><i class="fas fa-exclamation-triangle"></i> Urgent
+                Reminders</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Dues > Rs 5,000</p>
+
+            {% if high_due_students %}
+            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                {% for s in high_due_students %}
+                {% set bal = s.get_balance() %}
+                <div
+                    style="background: rgba(245, 158, 11, 0.05); padding: 0.8rem; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.2); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600;">{{ s.name }}</div>
+                        <div style="font-weight: 700; color: #ef4444; font-size: 0.85rem;">Rs {{ "%.0f"|format(bal) }}
+                        </div>
+                    </div>
+                    {% set msg = "Hello " ~ s.name ~ ", this is a reminder from Dance Academy that your dues of Rs " ~
+                    s.get_balance() ~ " are pending. Please pay at your earliest convenience." %}
+                    <a href="https://wa.me/{{ s.phone }}?text={{ msg|urlencode }}" target="_blank"
+                        style="color: #25D366; font-size: 1.2rem;" title="Send WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-style: italic; font-size: 0.9rem;">No students with high dues
+                currently.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Analytics Section -->
+    <div class="glass-card">
+        <h3 style="margin-bottom: 1.5rem; color: #6366f1;"><i class="fas fa-chart-line"></i> Financial Performance (6
+            Months)</h3>
+        <div style="height: 300px; position: relative;">
+            <canvas id="financialChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('financialChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ analytics_labels| tojson }},
+        datasets: [
+        {
+            label: 'Income',
+            data: {{ income_data| tojson }},
+        borderColor: '#34d399',
+        backgroundColor: 'rgba(52, 211, 153, 0.1)',
+        fill: true,
+        tension: 0.4
+                },
+        {
+            label: 'Expenses',
+            data: {{ expense_data| tojson }},
+        borderColor: '#ef4444',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        fill: true,
+        tension: 0.4
+                }
+    ]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: { color: '#94a3b8' }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                ticks: { color: '#94a3b8' }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { color: '#94a3b8' }
+            }
+        }
+    }
+    });
+});
+</script>
+{% endblock %}

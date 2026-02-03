@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}Workshops{% endblock %}
+
+{% block content %}
+<div class="glass-card"
+    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h3 style="margin: 0;">Academy Workshops</h3>
+        <p style="color: var(--text-muted); margin: 0;">Special events and short-term classes</p>
+    </div>
+    {% if current_user.role == 'Admin' %}
+    <a href="{{ url_for('workshops.add') }}" class="btn-primary">
+        <i class="fas fa-plus"></i> Create Workshop
+    </a>
+    {% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+    {% for workshop in workshops %}
+    <div class="glass-card" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <h4 style="margin: 0; font-size: 1.2rem; color: var(--primary);">{{ workshop.name }}</h4>
+            <span class="badge" style="background: rgba(52, 211, 153, 0.1); color: #34d399;">Rs {{ workshop.fee
+                }}</span>
+        </div>
+
+        <div style="font-size: 0.9rem; color: var(--text-muted);">
+            <div style="margin-bottom: 0.3rem;"><i class="fas fa-calendar-alt" style="width: 20px;"></i> {{
+                workshop.start_date }} to {{ workshop.end_date }}</div>
+            <div><i class="fas fa-info-circle" style="width: 20px;"></i> {{ workshop.description or 'No description
+                provided.' }}</div>
+        </div>
+
+        <div style="margin-top: auto; display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('workshops.view', id=workshop.id) }}" class="btn-primary"
+                style="flex: 1; text-align: center; background: rgba(99, 102, 241, 0.1); color: var(--primary); border: 1px solid var(--primary);">View
+                Details</a>
+            <a href="{{ url_for('workshops.enroll', id=workshop.id) }}" class="btn-primary"
+                style="flex: 1; text-align: center;">Enroll Now</a>
+            {% if current_user.role == 'Admin' %}
+            <a href="{{ url_for('workshops.edit', id=workshop.id) }}" class="btn-icon" title="Edit"><i
+                    class="fas fa-edit"></i></a>
+            <a href="{{ url_for('workshops.delete', id=workshop.id) }}" class="btn-icon" style="color: #ef4444;"
+                onclick="return confirm('Delete this workshop?');" title="Delete"><i class="fas fa-trash"></i></a>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <i class="fas fa-calendar-times"
+            style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem; display: block;"></i>
+        <p style="color: var(--text-muted);">No workshops scheduled yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

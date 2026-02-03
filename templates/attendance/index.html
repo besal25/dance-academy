@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block title %}Attendance Manager{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 2rem;">
+    <form action="{{ url_for('attendance.index') }}" method="post" style="display: flex; gap: 1rem; align-items: end;">
+        <div style="flex: 1;">
+            <label style="display: block; margin-bottom: 0.5rem;">Select Class</label>
+            <select name="class_id" required>
+                <option value="">-- Choose Class --</option>
+                {% for c in classes %}
+                <option value="{{ c.id }}" {{ 'selected' if selected_class and selected_class.id==c.id else '' }}>{{
+                    c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="width: 200px;">
+            <label style="display: block; margin-bottom: 0.5rem;">Date</label>
+            <div class="col-md-3">
+                <input type="text" name="date" class="form-control nepali-date-picker" value="{{ date }}"
+                    placeholder="YYYY-MM-DD (e.g., 2081-01-01)">
+            </div>
+        </div>
+        <button type="submit" class="btn-primary">Load Sheet</button>
+    </form>
+</div>
+
+{% if selected_class %}
+<div class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3>{{ selected_class.name }} - {{ date }}</h3>
+        <span style="color: var(--text-muted);">{{ students|length }} Students Enrolled</span>
+    </div>
+
+    <form action="{{ url_for('attendance.mark') }}" method="post">
+        <input type="hidden" name="class_id" value="{{ selected_class.id }}">
+        <input type="hidden" name="date" value="{{ date }}">
+
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid var(--border);">
+                    <th style="padding: 1rem;">Student Name</th>
+                    <th style="padding: 1rem;">Phone</th>
+                    <th style="padding: 1rem; text-align: center;">Present</th>
+                    <th style="padding: 1rem; text-align: center;">Absent</th>
+                    <th style="padding: 1rem; text-align: center;">Late</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem; font-weight: 500;">{{ student.name }}</td>
+                    <td style="padding: 1rem; color: var(--text-muted);">{{ student.phone }}</td>
+
+                    <td style="padding: 1rem; text-align: center;">
+                        <input type="radio" name="status_{{ student.id }}" value="Present" {{ 'checked' if
+                            student.attendance_status=='Present' else '' }}
+                            style="width: 20px; height: 20px; accent-color: #34d399;">
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <input type="radio" name="status_{{ student.id }}" value="Absent" {{ 'checked' if
+                            student.attendance_status=='Absent' or not student.attendance_status else '' }}
+                            style="width: 20px; height: 20px; accent-color: #ef4444;">
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <input type="radio" name="status_{{ student.id }}" value="Late" {{ 'checked' if
+                            student.attendance_status=='Late' else '' }}
+                            style="width: 20px; height: 20px; accent-color: #f59e0b;">
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="padding: 2rem; text-align: center;">No students enrolled in this class.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div style="margin-top: 2rem; text-align: right; display: flex; justify-content: flex-end; gap: 1rem;">
+            {% if is_future %}
+            <div
+                style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.8rem 1.2rem; border-radius: 8px; font-weight: 500;">
+                <i class="fas fa-exclamation-triangle"></i> Attendance cannot be taken for future dates.
+            </div>
+            {% else %}
+            <button type="submit" class="btn-primary">Save Attendance</button>
+            {% endif %}
+            <a href="{{ url_for('reports.export_attendance', class_id=selected_class.id if selected_class else None, date=date) }}"
+                class="btn-secondary"
+                style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 0.25rem; display: inline-block;">Export
+                CSV</a>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

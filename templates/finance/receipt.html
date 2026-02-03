@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt - {{ site_settings.academy_name }}</title>
+    <style>
+        :root {
+            --primary: #1a1a1a;
+            --muted: #666;
+            --border: #ddd;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f1f1f1;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            padding: 10mm;
+            margin: 10mm auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10mm;
+            box-sizing: border-box;
+        }
+
+        .a5-receipt {
+            flex: 1;
+            padding: 5mm;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .copy-label {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .academy-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .academy-info p {
+            margin: 2px 0;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .logo {
+            max-width: 60px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        .receipt-body {
+            flex: 1;
+        }
+
+        .receipt-title {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            text-decoration: underline;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 0.9rem;
+        }
+
+        .data-label {
+            color: var(--muted);
+        }
+
+        .data-value {
+            font-weight: 600;
+        }
+
+        .amount-box {
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+            padding: 12px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px;
+        }
+
+        .amount-text {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .footer {
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .signature-box {
+            text-align: center;
+            border-top: 1px solid var(--primary);
+            width: 150px;
+            padding-top: 5px;
+            font-weight: 600;
+        }
+
+        .cut-line {
+            border-top: 2px dashed #999;
+            height: 0;
+            position: relative;
+            margin: 5mm 0;
+        }
+
+        .cut-line::after {
+            content: "\2704";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 10px;
+            font-size: 1.2rem;
+            color: #999;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .a4-page {
+                margin: 0;
+                box-shadow: none;
+                width: 210mm;
+                height: 297mm;
+            }
+
+            .btn-print {
+                display: none;
+            }
+        }
+
+        .btn-print {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> Print Receipt (A4)</button>
+
+    <div class="a4-page">
+        <!-- Receipt Top (Office Copy) -->
+        <div class="a5-receipt">
+            <div class="copy-label">OFFICE COPY</div>
+            <div class="header">
+                <div class="academy-info">
+                    <h1 class="academy-name">{{ site_settings.academy_name }}</h1>
+                    <p>{{ site_settings.address or '' }}</p>
+                    <p>Phone: {{ site_settings.contact or '' }}</p>
+                </div>
+                {% if site_settings.logo_path %}
+                <img src="{{ url_for('static', filename=site_settings.logo_path) }}" class="logo">
+                {% endif %}
+            </div>
+
+            <div class="receipt-body">
+                <div class="receipt-title">Payment Receipt</div>
+                <div class="data-row">
+                    <span class="data-label">Receipt No:</span>
+                    <span class="data-value">#{{ txn.id }}</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Date:</span>
+                    <span class="data-value">{{ txn.date }}</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Student Name:</span>
+                    <span class="data-value">{{ txn.student.name }}</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Purpose:</span>
+                    <span class="data-value">{{ txn.description }}</span>
+                </div>
+
+                <div class="amount-box">
+                    <span style="font-weight: bold; color: var(--muted);">AMOUNT PAID:</span>
+                    <span class="amount-text">{{ site_settings.currency }} {{ "%.2f"|format(txn.credit if txn.credit > 0
+                        else txn.debit) }}</span>
+                </div>
+
+                <div class="data-row" style="border: none;">
+                    <span class="data-label">Current Outstanding Balance:</span>
+                    <span class="data-value" style="color: {{ '#ef4444' if txn.balance_after > 0 else '#34d399' }};">
+                        {{ site_settings.currency }} {{ "%.2f"|format(txn.balance_after) if txn.balance_after >= 0 else
+                        "%.2f (Adv)"|format(txn.balance_after|abs) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div>
+                    <p style="margin:0;">Printed on: {{ today_bs }}</p>
+                    <p style="margin:0; font-style: italic;">Thank you for your trust!</p>
+                </div>
+                <div class="signature-box">
+                    Authorized Signatory
+                </div>
+            </div>
+        </div>
+
+        <!-- Scissors Cut Line -->
+        <div class="cut-line"></div>
+
+        <!-- Receipt Bottom (Student Copy) -->
+        <div class="a5-receipt">
+            <div class="copy-label">STUDENT COPY</div>
+            <div class="header">
+                <div class="academy-info">
+                    <h1 class="academy-name">{{ site_settings.academy_name }}</h1>
+                    <p>{{ site_settings.address or '' }}</p>
+                    <p>Phone: {{ site_settings.contact or '' }}</p>
+                </div>
+                {% if site_settings.logo_path %}
+                <img src="{{ url_for('static', filename=site_settings.logo_path) }}" class="logo">
+                {% endif %}
+            </div>
+
+            <div class="receipt-body">
+                <div class="receipt-title">Payment Receipt</div>
+                <div class="data-row">
+                    <span class="data-label">Receipt No:</span>
+                    <span class="data-value">#{{ txn.id }}</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Date:</span>
+                    <span class="data-value">{{ txn.date }}</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Student Name:</span>
+                    <span class="data-value">{{ txn.student.name }}</span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Purpose:</span>
+                    <span class="data-value">{{ txn.description }}</span>
+                </div>
+
+                <div class="amount-box">
+                    <span style="font-weight: bold; color: var(--muted);">AMOUNT PAID:</span>
+                    <span class="amount-text">{{ site_settings.currency }} {{ "%.2f"|format(txn.credit if txn.credit > 0
+                        else txn.debit) }}</span>
+                </div>
+
+                <div class="data-row" style="border: none;">
+                    <span class="data-label">Current Outstanding Balance:</span>
+                    <span class="data-value" style="color: {{ '#ef4444' if txn.balance_after > 0 else '#34d399' }};">
+                        {{ site_settings.currency }} {{ "%.2f"|format(txn.balance_after) if txn.balance_after >= 0 else
+                        "%.2f (Adv)"|format(txn.balance_after|abs) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div>
+                    <p style="margin:0;">Printed on: {{ today_bs }}</p>
+                    <p style="margin:0; font-style: italic;">Thank you for your trust!</p>
+                </div>
+                <div class="signature-box">
+                    Authorized Signatory
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

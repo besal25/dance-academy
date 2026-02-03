@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}Membership Packages{% endblock %}
+
+{% block content %}
+<div class="glass-card"
+    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h3 style="margin: 0;">Academy Packages</h3>
+        <p style="color: var(--text-muted); margin: 0;">Special long-term memberships with discounted rates</p>
+    </div>
+    {% if current_user.role == 'Admin' %}
+    <a href="{{ url_for('packages.add') }}" class="btn-primary">
+        <i class="fas fa-plus"></i> Create Package
+    </a>
+    {% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+    {% for package in packages %}
+    <div class="glass-card" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <h4 style="margin: 0; font-size: 1.2rem; color: var(--primary);">{{ package.name }}</h4>
+            <span class="badge" style="background: rgba(52, 211, 153, 0.1); color: #34d399;">Rs {{ package.price
+                }}</span>
+        </div>
+
+        <div style="font-size: 0.9rem; color: var(--text-muted);">
+            <div style="margin-bottom: 0.3rem;"><i class="fas fa-clock" style="width: 20px;"></i> {{
+                package.duration_months }} Months</div>
+            <div><i class="fas fa-info-circle" style="width: 20px;"></i> {{ package.description or 'Standard package.'
+                }}</div>
+        </div>
+
+        <div style="margin-top: auto; display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('packages.view', id=package.id) }}" class="btn-primary"
+                style="flex: 1; text-align: center; background: rgba(99, 102, 241, 0.1); color: var(--primary); border: 1px solid var(--primary);">View
+                Members</a>
+            <a href="{{ url_for('packages.enroll', id=package.id) }}" class="btn-primary"
+                style="flex: 1; text-align: center;">Enroll Student</a>
+            {% if current_user.role == 'Admin' %}
+            <a href="{{ url_for('packages.edit', id=package.id) }}" class="btn-icon" title="Edit"><i
+                    class="fas fa-edit"></i></a>
+            <a href="{{ url_for('packages.delete', id=package.id) }}" class="btn-icon" style="color: #ef4444;"
+                onclick="return confirm('Delete this package?');"><i class="fas fa-trash"></i></a>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <i class="fas fa-box-open"
+            style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem; display: block;"></i>
+        <p style="color: var(--text-muted);">No packages defined yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

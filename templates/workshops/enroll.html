@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Enroll in {{ workshop.name }}{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+    <h3 style="margin-top: 0; color: var(--primary);">Workshop Enrollment</h3>
+    <p style="color: var(--text-muted);">Fee: Rs {{ workshop.fee }} | Duration: {{ workshop.start_date }} to {{
+        workshop.end_date }}</p>
+
+    <div
+        style="margin: 2rem 0; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px solid var(--border);">
+        <label style="display: block; margin-bottom: 1rem;">
+            <input type="radio" name="enroll_type" value="internal" checked onchange="toggleEnrollMode(this.value)">
+            Existing Academy Student
+        </label>
+        <label style="display: block;">
+            <input type="radio" name="enroll_type" value="external" onchange="toggleEnrollMode(this.value)">
+            Outside Guest
+        </label>
+    </div>
+
+    <form method="post" id="enroll-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div id="student_select_div">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Select Student</label>
+            <select name="student_id" id="student_id">
+                <option value="">-- Choose Student --</option>
+                {% for s in students %}
+                <option value="{{ s.id }}">{{ s.name }} ({{ s.phone }})</option>
+                {% endfor %}
+            </select>
+
+            <div id="waiver_div"
+                style="margin-top: 1rem; padding: 0.8rem; background: rgba(239, 68, 68, 0.05); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin: 0;">
+                    <input type="checkbox" name="skip_monthly" value="yes">
+                    <span style="font-size: 0.9rem; color: #f87171;">Skip monthly fee for this month? (Waiver)</span>
+                </label>
+            </div>
+        </div>
+
+        <div id="guest_info_div" style="display: none;">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Guest Name</label>
+                <input type="text" name="guest_name" id="guest_name" placeholder="Full Name">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Guest Phone</label>
+                <input type="text" name="guest_phone" id="guest_phone" placeholder="Phone Number">
+            </div>
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Amount Paid (Rs)</label>
+            <input type="number" name="amount_paid" value="0" step="100" required>
+            <small style="color: var(--text-muted);">Internal students will be billed for any remaining amount on their
+                ledger.</small>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn-primary">Confirm Enrollment</button>
+            <a href="{{ url_for('workshops.index') }}"
+                style="padding: 0.8rem 1.5rem; color: var(--text-muted); text-decoration: none;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleEnrollMode(mode) {
+        const studentDiv = document.getElementById('student_select_div');
+        const guestDiv = document.getElementById('guest_info_div');
+        const waiverDiv = document.getElementById('waiver_div');
+        const studentId = document.getElementById('student_id');
+        const guestName = document.getElementById('guest_name');
+
+        if (mode === 'internal') {
+            studentDiv.style.display = 'block';
+            guestDiv.style.display = 'none';
+            waiverDiv.style.display = 'block';
+            studentId.required = true;
+            guestName.required = false;
+        } else {
+            studentDiv.style.display = 'none';
+            guestDiv.style.display = 'block';
+            waiverDiv.style.display = 'none';
+            studentId.required = false;
+            guestName.required = true;
+            studentId.value = "";
+        }
+    }
+    // Set initial
+    toggleEnrollMode('internal');
+</script>
+{% endblock %}

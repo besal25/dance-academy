@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block title %}Ledger: {{ student.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="{{ url_for('students.index') }}" style="color: var(--text-muted); text-decoration: none;"><i
+            class="fas fa-arrow-left"></i> Back to Students</a>
+</div>
+
+<div class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+        <div>
+            <h2 style="font-size: 1.5rem;">{{ student.name }}</h2>
+            <p style="color: var(--text-muted);">{{ student.phone }} | Monthly Fee: Rs {{
+                "%.0f"|format(student.custom_monthly_fee) }}</p>
+        </div>
+        <div style="text-align: right;">
+            {% set current_bal = student.get_balance() %}
+            <h2 style="font-size: 2rem; color: {{ '#ef4444' if current_bal > 0 else '#34d399' }};">
+                {{ "Rs %.2f"|format(current_bal) if current_bal >= 0 else "Rs %.2f (Adv)"|format(current_bal|abs) }}
+            </h2>
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">{{ 'Accounts Receivable (Dues)' if current_bal > 0
+                else 'Deferred Revenue (Advance)' }}</p>
+            <a href="{{ url_for('finance.pay', student_id=student.id) }}" class="btn-primary"><i
+                    class="fas fa-money-bill-wave"></i> Accept Payment</a>
+        </div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);">
+                <th style="padding: 1rem;">Date</th>
+                <th style="padding: 1rem;">Description</th>
+                <th style="padding: 1rem; text-align: right;">Debit (Charge)</th>
+                <th style="padding: 1rem; text-align: right;">Credit (Payment)</th>
+                <th style="padding: 1rem; text-align: right;">Running Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for txn in transactions %}
+            <tr
+                style="border-bottom: 1px solid var(--border); {{ 'opacity: 0.5; text-decoration: line-through;' if txn.is_void else '' }}">
+                <td style="padding: 1rem; color: var(--text-muted);">{{ txn.date }}</td>
+                <td style="padding: 1rem;">
+                    {{ txn.description }}
+                    {% if txn.is_void %}
+                    <span
+                        style="font-size: 0.7rem; background: var(--border); padding: 2px 6px; border-radius: 4px; margin-left: 5px; text-decoration: none; display: inline-block;">VOID</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 1rem; text-align: right; color: #ef4444;">{{ "%.2f"|format(txn.debit) if txn.debit >
+                    0 else '-' }}</td>
+                <td style="padding: 1rem; text-align: right; color: #34d399;">{{ "%.2f"|format(txn.credit) if txn.credit
+                    > 0 else '-' }}</td>
+                <td style="padding: 1rem; text-align: right; font-weight: 500;">
+                    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem;">
+                        <span
+                            style="color: {{ '#ef4444' if txn.balance_after > 0 else '#34d399' }}; text-decoration: none; display: inline-block;">
+                            {{ "%.2f"|format(txn.balance_after) if txn.balance_after >= 0 else "%.2f
+                            Adv"|format(txn.balance_after|abs) }}
+                        </span>
+                        {% if txn.credit > 0 and not txn.is_void %}
+                        <a href="{{ url_for('finance.print_receipt', id=txn.id) }}" target="_blank"
+                            style="color: var(--primary); font-size: 0.8rem; text-decoration: none;"
+                            title="Print Receipt"><i class="fas fa-print"></i></a>
+                        {% endif %}
+
+                        {% if not txn.is_void %}
+                        <a href="{{ url_for('finance.void_transaction', id=txn.id) }}"
+                            style="color: var(--text-muted); font-size: 0.8rem; text-decoration: none;"
+                            onclick="return confirm('VOID this transaction? It will be preserved in the audit trail but won\'t affect the balance.');"
+                            title="Void"><i class="fas fa-ban"></i></a>
+                        {% endif %}
+
+                        {% if current_user.role == 'Admin' %}
+                        <a href="{{ url_for('finance.delete_transaction', id=txn.id) }}"
+                            style="color: #ef4444; font-size: 0.8rem; text-decoration: none;"
+                            onclick="return confirm('PERMANENTLY DELETE this transaction? This action cannot be undone and will affect all balances.');"
+                            title="Delete Permanently"><i class="fas fa-trash-alt"></i></a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="padding: 2rem; text-align: center;">No transactions for this student.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

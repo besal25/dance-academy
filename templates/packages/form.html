@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ 'Edit Package' if package else 'New Package' }}{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+    <form method="post" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Package Name</label>
+            <input type="text" name="name" value="{{ package.name if package else '' }}" required
+                placeholder="e.g. 3 Months Beginner Pack">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Duration
+                    (Months)</label>
+                <input type="number" name="duration_months" value="{{ package.duration_months if package else '3' }}"
+                    required min="1">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Price (Rs)</label>
+                <input type="number" name="price" value="{{ package.price if package else '' }}" required step="100">
+            </div>
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Description</label>
+            <textarea name="description" rows="4"
+                placeholder="What's included in this package?">{{ package.description if package else '' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn-primary">{{ 'Update Package' if package else 'Create Package' }}</button>
+            <a href="{{ url_for('packages.index') }}"
+                style="padding: 0.8rem 1.5rem; color: var(--text-muted); text-decoration: none;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

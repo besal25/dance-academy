@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ package.name }} - Details{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+    <!-- Package Summary -->
+    <div class="glass-card" style="height: fit-content;">
+        <h3 style="color: var(--primary); margin-top: 0;">{{ package.name }}</h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+                <label style="color: var(--text-muted); font-size: 0.8rem; display: block;">Duration</label>
+                <span>{{ package.duration_months }} Months</span>
+            </div>
+            <div>
+                <label style="color: var(--text-muted); font-size: 0.8rem; display: block;">Price</label>
+                <span style="font-weight: 600; font-size: 1.2rem;">Rs {{ package.price }}</span>
+            </div>
+            <div>
+                <label style="color: var(--text-muted); font-size: 0.8rem; display: block;">About</label>
+                <p style="margin: 0; font-size: 0.9rem;">{{ package.description or 'Standard package.' }}</p>
+            </div>
+            <div
+                style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; gap: 0.5rem;">
+                <a href="{{ url_for('packages.enroll', id=package.id) }}" class="btn-primary"
+                    style="flex: 1; text-align: center;">Enroll New</a>
+                {% if current_user.role == 'Admin' %}
+                <a href="{{ url_for('packages.delete', id=package.id) }}" class="btn-icon" style="color: #ef4444;"
+                    onclick="return confirm('Delete this package?');"><i class="fas fa-trash"></i></a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Enrollment List -->
+    <div class="glass-card">
+        <h3 style="margin-top: 0;">Active Memberships</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid var(--border);">
+                    <th style="padding: 1rem;">Student</th>
+                    <th style="padding: 1rem;">Duration (BS)</th>
+                    <th style="padding: 1rem; text-align: right;">Paid</th>
+                    <th style="padding: 1rem; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in enrollments %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem;">
+                        <a href="{{ url_for('students.edit', id=entry.student_id) }}"
+                            style="color: var(--primary); text-decoration: none;">
+                            <i class="fas fa-user-graduate" style="margin-right: 5px;"></i> {{ entry.student.name }}
+                        </a>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ entry.student.phone }}</div>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <div style="font-size: 0.9rem;">{{ entry.start_date }} to</div>
+                        <div style="font-size: 0.9rem;">{{ entry.end_date }}</div>
+                    </td>
+                    <td style="padding: 1rem; text-align: right; font-weight: 500;">Rs {{ entry.total_price }} (Paid: {{
+                        entry.amount_paid }})</td>
+                    <td style="padding: 1rem; text-align: right;">
+                        {% if current_user.role == 'Admin' %}
+                        <a href="{{ url_for('packages.delete_enrollment', id=entry.id) }}" class="btn-icon"
+                            style="color: #ef4444;" onclick="return confirm('Cancel this membership?');">
+                            <i class="fas fa-user-minus"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">No members in
+                        this package.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

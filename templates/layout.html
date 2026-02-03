@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dance Academy Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Nepali DatePicker CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/nepali-datepicker-v4@4.0.1/dist/css/nepali.datepicker.v4.0.1.min.css"
+        rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="brand">
+                {% if site_settings.logo_path %}
+                <img src="{{ url_for('static', filename=site_settings.logo_path) }}"
+                    style="width: 35px; height: 35px; border-radius: 8px; margin-right: 10px; object-fit: contain;">
+                {% else %}
+                <i class="fas fa-music"></i>
+                {% endif %}
+                <span>{{ site_settings.academy_name }}</span>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="/" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+
+                {% if current_user.can_manage_students or current_user.role == 'Admin' %}
+                <li><a href="/students"><i class="fas fa-user-graduate"></i> Students</a></li>
+                {% endif %}
+
+                {% if current_user.can_manage_classes or current_user.role == 'Admin' %}
+                <li><a href="/classes"><i class="fas fa-chalkboard-teacher"></i> Classes</a></li>
+                <li><a href="/workshops"><i class="fas fa-microphone-alt"></i> Workshops</a></li>
+                <li><a href="/packages"><i class="fas fa-box"></i> Packages</a></li>
+                <li><a href="/inventory"><i class="fas fa-tshirt"></i> Clothing & Shop</a></li>
+                {% endif %}
+
+                {% if current_user.can_view_attendance or current_user.role == 'Admin' %}
+                <li><a href="/attendance"><i class="fas fa-calendar-check"></i> Attendance</a></li>
+                {% endif %}
+
+                {% if current_user.can_view_finance or current_user.role == 'Admin' %}
+                <li><a href="/finance"><i class="fas fa-wallet"></i> Finance <span class="badge">Ledger</span></a></li>
+                {% endif %}
+
+                {% if current_user.can_manage_expenses or current_user.role == 'Admin' %}
+                <li><a href="/expenses"><i class="fas fa-tags"></i> Expenses</a></li>
+                {% endif %}
+
+                {% if current_user.can_view_reports or current_user.role == 'Admin' %}
+                <li><a href="/reports"><i class="fas fa-chart-line"></i> Reports</a></li>
+                {% endif %}
+
+                <li style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    {% if current_user.can_manage_settings or current_user.role == 'Admin' %}
+                    <a href="{{ url_for('settings.index') }}"><i class="fas fa-cog"></i> Settings</a>
+                    {% endif %}
+                </li>
+
+                {% if current_user.role == 'Admin' %}
+                <li><a href="{{ url_for('auth.user_list') }}"><i class="fas fa-users"></i> Users</a></li>
+                {% endif %}
+
+                <li><a href="{{ url_for('auth.change_password') }}"><i class="fas fa-key"></i> Password</a></li>
+            </ul>
+
+            <div class="user-profile">
+                <div class="avatar"><i class="fas fa-user"></i></div>
+                <div class="info">
+                    <span class="name">{{ current_user.username | capitalize }}</span>
+                    <span class="role">{{ current_user.role }}</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 class="page-title">{% block title %}Dashboard{% endblock %}</h1>
+                <div class="actions">
+                    <button class="btn-icon" onclick="toggleSearch()" title="Search (Alt + S)"><i
+                            class="fas fa-search"></i></button>
+                    <div style="position: relative; display: inline-block;">
+                        <button class="btn-icon" onclick="toggleNotifications()" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            <span id="notif-badge" class="bell-badge" style="display: none;"></span>
+                        </button>
+                        <!-- Notification Dropdown -->
+                        <div id="notification-dropdown" class="dropdown-panel" style="display: none;">
+                            <div class="dropdown-header">
+                                <span>Recent Alerts</span>
+                                <span onclick="fetchAlerts()"
+                                    style="cursor: pointer; color: var(--primary); font-size: 0.8rem;">Refresh</span>
+                            </div>
+                            <div id="notification-list" class="notif-list">
+                                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">Loading
+                                    alerts...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('auth.logout') }}" class="btn-icon" title="Logout" style="color: #ef4444;"><i
+                            class="fas fa-sign-out-alt"></i></a>
+                </div>
+            </header>
+
+            <div class="content-area">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-messages" style="margin-bottom: 1.5rem;">
+                    {% for category, message in messages %}
+                    <div
+                        style="padding: 1rem; border-radius: 12px; margin-bottom: 0.5rem; background: rgba(99, 102, 241, 0.1); border: 1px solid var(--border); border-left: 4px solid var(--primary); color: white; display: flex; justify-content: space-between; align-items: center;">
+                        <span>{{ message | safe }}</span>
+                        <i class="fas fa-check-circle" style="color: var(--primary);"></i>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="modal-overlay" style="display: none;"
+        onclick="if(event.target == this) toggleSearch()">
+        <div class="search-content">
+            <div class="search-header">
+                <i class="fas fa-search" style="color: var(--primary);"></i>
+                <input type="text" id="global-search-input" placeholder="Search students, classes, or txn IDs..."
+                    autocomplete="off">
+                <button onclick="toggleSearch()"
+                    style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div id="search-results" class="search-results">
+                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">Type to search...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nepali DatePicker JS -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/nepali-datepicker-v4@4.0.1/dist/js/nepali.datepicker.v4.0.1.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function initPickers() {
+                var nepaliInputs = document.querySelectorAll('.nepali-date-picker');
+                nepaliInputs.forEach(function (input) {
+                    if (input.nepaliDatePicker) {
+                        input.nepaliDatePicker({
+                            ndpYear: true,
+                            ndpMonth: true,
+                            ndpYearCount: 200
+                        });
+                    }
+                });
+            }
+
+            initPickers();
+            // Re-init for any dynamically added elements or if first pass missed
+            setTimeout(initPickers, 500);
+
+            // --- Search Logic ---
+            const searchModal = document.getElementById('search-modal');
+            const searchInput = document.getElementById('global-search-input');
+            const searchResults = document.getElementById('search-results');
+
+            window.toggleSearch = function () {
+                const isHidden = searchModal.style.display === 'none';
+                searchModal.style.display = isHidden ? 'flex' : 'none';
+                if (isHidden) {
+                    searchInput.value = '';
+                    searchResults.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted);">Type to search...</div>';
+                    setTimeout(() => searchInput.focus(), 100);
+                }
+            }
+
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim();
+                if (query.length < 2) {
+                    searchResults.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted);">Type at least 2 characters...</div>';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`/api/search?q=${encodeURIComponent(query)}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.results.length === 0) {
+                                searchResults.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted);">No results found.</div>';
+                            } else {
+                                searchResults.innerHTML = data.results.map(res => `
+                                    <a href="${res.url}" class="search-item">
+                                        <i class="${res.icon}"></i>
+                                        <div>
+                                            <div style="font-weight: 600;">${res.title}</div>
+                                            <div style="font-size: 0.8rem; color: var(--text-muted);">${res.subtitle}</div>
+                                        </div>
+                                        <div style="margin-left: auto; font-size: 0.7rem; color: var(--primary); font-weight: 600;">${res.type.toUpperCase()}</div>
+                                    </a>
+                                `).join('');
+                            }
+                        });
+                }, 300);
+            });
+
+            // Shortcut Alt + S for search
+            document.addEventListener('keydown', (e) => {
+                if (e.altKey && e.key.toLowerCase() === 's') {
+                    e.preventDefault();
+                    toggleSearch();
+                }
+                if (e.key === 'Escape' && searchModal.style.display === 'flex') {
+                    toggleSearch();
+                }
+            });
+
+            // --- Notification Logic ---
+            const notifDropdown = document.getElementById('notification-dropdown');
+            const notifList = document.getElementById('notification-list');
+            const notifBadge = document.getElementById('notif-badge');
+
+            window.toggleNotifications = function () {
+                const isHidden = notifDropdown.style.display === 'none';
+                notifDropdown.style.display = isHidden ? 'block' : 'none';
+                if (isHidden) fetchAlerts();
+            }
+
+            window.fetchAlerts = function () {
+                fetch('/api/alerts')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.count > 0) {
+                            notifBadge.style.display = 'block';
+                            notifList.innerHTML = data.alerts.map(a => `
+                                <a href="${a.url}" class="notif-item">
+                                    <div class="notif-icon" style="background: ${a.color}20; color: ${a.color};">
+                                        <i class="${a.icon}"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 0.9rem;">${a.title}</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">${a.message}</div>
+                                    </div>
+                                </a>
+                            `).join('');
+                        } else {
+                            notifBadge.style.display = 'none';
+                            notifList.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted);">No urgent alerts! 🎉</div>';
+                        }
+                    });
+            }
+
+            // Initial check for alerts
+            fetchAlerts();
+            // Poll every 5 minutes
+            setInterval(fetchAlerts, 5 * 60 * 1000);
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.actions')) {
+                    notifDropdown.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

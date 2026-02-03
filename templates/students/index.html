@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block title %}Students{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <form action="{{ url_for('students.index') }}" method="get" style="display: flex; gap: 1rem; width: 50%;">
+            <input type="text" name="search" placeholder="Search by name or phone..." value="{{ search }}">
+            <button type="submit" class="btn-primary">Search</button>
+        </form>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('students.add') }}" class="btn-primary"><i class="fas fa-plus"></i> New Student</a>
+            {% if current_user.role == 'Admin' %}
+            <form method="post" action="{{ url_for('students.delete_all') }}" style="display: inline;"
+                onsubmit="return confirm('⚠️ DANGER: This will permanently delete ALL students and ALL related records (ledger, attendance, packages, workshops, etc.).\n\nType DELETE in the next prompt to confirm.') && prompt('Type DELETE to confirm:') === 'DELETE';">
+                <button type="submit" class="btn-icon"
+                    style="background: #dc2626; color: white; padding: 0.8rem 1.2rem; border-radius: 8px;"
+                    title="Delete All Students">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; color: var(--text-main);">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                <th style="padding: 1rem;">Name</th>
+                <th style="padding: 1rem;">Phone</th>
+                <th style="padding: 1rem;">Status</th>
+                <th style="padding: 1rem;">Monthly Fee</th>
+                <th style="padding: 1rem;">Balance</th>
+                <th style="padding: 1rem;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 1rem; font-weight: 500;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div
+                            style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            {% if student.photo_path %}
+                            <img src="{{ url_for('static', filename=student.photo_path) }}"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            <i class="fas fa-user" style="color: var(--text-muted); font-size: 1rem;"></i>
+                            {% endif %}
+                        </div>
+                        <span>{{ student.name }}</span>
+                    </div>
+                </td>
+                <td style="padding: 1rem; color: var(--text-muted);">{{ student.phone }}</td>
+                <td style="padding: 1rem;">
+                    <span style="background: {{ 'rgba(16, 185, 129, 0.2)' if student.status == 'Active' else 'rgba(239, 68, 68, 0.2)' }}; 
+                                color: {{ '#34d399' if student.status == 'Active' else '#f87171' }};
+                                padding: 4px 8px; border-radius: 6px; font-size: 0.8rem;">
+                        {{ student.status }}
+                    </span>
+                </td>
+                <td style="padding: 1rem;">Rs {{ "%.2f"|format(student.custom_monthly_fee) }}</td>
+                <td style="padding: 1rem;">
+                    {% set bal = student.get_balance() %}
+                    <span style="color: {{ '#ef4444' if bal > 0 else '#34d399' }}">
+                        {{ "Rs %.2f"|format(bal) if bal >= 0 else "Rs %.2f Adv"|format(bal|abs) }}
+                    </span>
+                </td>
+                <td style="padding: 1rem; display: flex; gap: 0.5rem;">
+                    <a href="{{ url_for('students.progress', id=student.id) }}" class="btn-icon" title="Progress Report"
+                        style="background: #f59e0b; color: white;">
+                        <i class="fas fa-chart-line"></i>
+                    </a>
+                    <a href="{{ url_for('finance.student_ledger', student_id=student.id) }}" class="btn-icon"
+                        title="Ledger" style="background: #6366f1; color: white;">
+                        <i class="fas fa-wallet"></i>
+                    </a>
+                    <a href="{{ url_for('students.edit', id=student.id) }}" class="btn-icon" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{{ url_for('students.delete', id=student.id) }}" class="btn-icon" title="Delete"
+                        style="color: #ef4444;"
+                        onclick="return confirm('Are you sure? This will delete all attendance and financial records for {{ student.name }}.');">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-muted);">No students found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

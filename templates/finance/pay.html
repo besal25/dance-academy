@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 500px; margin: 0 auto;">
+    <h2 style="margin-bottom: 1rem;">Payment for {{ student.name }}</h2>
+    <p style="margin-bottom: 2rem; color: var(--text-muted);">Current Balance: <span
+            style="color: {{ '#ef4444' if balance > 0 else '#34d399' }}">Rs {{ "%.2f"|format(balance) }}</span></p>
+
+    <form method="post" style="display: grid; gap: 1.5rem;">
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem;">Amount (Rs)</label>
+            <input type="number" name="amount" step="1" required autofocus>
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem;">Payment Mode</label>
+            <select name="mode">
+                <option value="Cash">Cash</option>
+                <option value="QR/Digital">QR / Digital</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-primary">Record Payment</button>
+    </form>
+</div>
+{% endblock %}
