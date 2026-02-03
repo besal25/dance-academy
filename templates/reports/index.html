@@ -1,170 +1,193 @@
 {% extends "layout.html" %}
 
-{% block title %}Reports{% endblock %}
+{% block title %}Reports & Analytics{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
 {% block content %}
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; height: calc(100vh - 150px); overflow: hidden;">
+<div style="display: flex; flex-direction: column; gap: 2rem; height: calc(100vh - 140px);">
 
-    <!-- Left: Income Report -->
-    <div class="glass-card" style="display: flex; flex-direction: column;">
-        <h2 style="margin-bottom: 1rem; color: #34d399;"><i class="fas fa-coins"></i> Income Report</h2>
-
+    <!-- Top Filter Bar -->
+    <div class="glass-card"
+        style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <h2 style="margin: 0; display: flex; align-items: center; gap: 0.8rem; font-size: 1.5rem;">
+            <i class="fas fa-chart-pie" style="color: var(--primary);"></i> Reports Center
+        </h2>
         <form action="{{ url_for('reports.index') }}" method="get"
-            style="display: flex; gap: 0.5rem; margin-bottom: 1rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px;">
-            <div>
-                <label style="font-size: 0.8rem; color: var(--text-muted);">From (BS)</label>
+            style="display: flex; align-items: center; gap: 1rem;">
+            <div
+                style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border);">
+                <i class="fas fa-calendar-alt" style="color: var(--text-muted);"></i>
                 <input type="text" name="start_date" class="nepali-date-picker" value="{{ start_date }}"
-                    placeholder="YYYY-MM-DD" style="padding: 0.5rem; width: 120px;">
-            </div>
-            <div>
-                <label style="font-size: 0.8rem; color: var(--text-muted);">To (BS)</label>
+                    placeholder="Start Date"
+                    style="border: none; background: transparent; color: var(--text-main); width: 100px; outline: none; font-family: inherit;">
+                <span style="color: var(--text-muted);">-</span>
                 <input type="text" name="end_date" class="nepali-date-picker" value="{{ end_date }}"
-                    placeholder="YYYY-MM-DD" style="padding: 0.5rem; width: 120px;">
+                    placeholder="End Date"
+                    style="border: none; background: transparent; color: var(--text-main); width: 100px; outline: none; font-family: inherit;">
             </div>
-            <button type="submit" class="btn-primary" style="margin-top: 1.2rem;">Filter</button>
+            <button type="submit" class="btn-primary" style="padding: 0.5rem 1.2rem;">Filter</button>
             <a href="{{ url_for('reports.export_income', start_date=start_date, end_date=end_date) }}"
-                class="btn-secondary"
-                style="margin-top: 1.2rem; display: flex; align-items: center; justify-content: center; text-decoration: none; padding: 0 1rem; border-radius: 8px; background: #6b7280; color: white;">Export
-                CSV</a>
+                class="btn-secondary" title="Export CSV">
+                <i class="fas fa-download"></i>
+            </a>
         </form>
+    </div>
 
-        <div
-            style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; background: rgba(0,0,0,0.1); padding: 1rem; border-radius: 8px;">
-            <div>
-                <small style="color: var(--text-muted); display: block;">Income</small>
-                <span style="color: #34d399;">Rs {{ "%.2f"|format(total_income) }}</span>
-            </div>
-            <div>
-                <small style="color: var(--text-muted); display: block;">Expense</small>
-                <span style="color: #ef4444;">Rs {{ "%.2f"|format(total_expense) }}</span>
-            </div>
-            <div>
-                <small style="color: var(--text-muted); display: block;">Net Profit</small>
-                <span style="color: {{ 'limegreen' if net_profit >= 0 else 'red' }};">Rs {{ "%.2f"|format(net_profit)
-                    }}</span>
-            </div>
-        </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; min-height: 0;">
 
-        <div class="table-scroll-wrapper" style="flex: 1;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                <thead style="position: sticky; top: 0; background: var(--bg-card);">
-                    <tr style="text-align: left; border-bottom: 1px solid var(--border);">
-                        <th style="padding: 0.8rem;">Date</th>
-                        <th style="padding: 0.8rem;">Details</th>
-                        <th style="padding: 0.8rem;">Type</th>
-                        <th style="padding: 0.8rem; text-align: right;">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Income -->
-                    {% for txn in income_txns %}
-                    <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 0.8rem; color: var(--text-muted);">{{ txn.date }}</td>
-                        <td style="padding: 0.8rem;">
-                            {{ txn.name }}
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ txn.description }}</div>
-                        </td>
-                        <td style="padding: 0.8rem;"><span class="badge"
-                                style="background: rgba(52, 211, 153, 0.1); color: #34d399;">{{ txn.type }}</span></td>
-                        <td style="padding: 0.8rem; text-align: right; color: #34d399;">
-                            {{ "%.0f"|format(txn.amount) }}
-                            <div style="display: inline-flex; gap: 0.3rem; margin-left: 0.5rem; opacity: 0.7;">
-                                {% if txn.type == 'Ledger' %}
-                                {% if not txn.is_void %}
+        <!-- LEFT: Financial Report -->
+        <div class="glass-card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--border);">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.2rem;">Financial Overview</h3>
+
+                <!-- Summary Cards -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div
+                        style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                        <div style="font-size: 0.85rem; color: #34d399; margin-bottom: 0.3rem;">Total Income</div>
+                        <div style="font-size: 1.2rem; font-weight: 600;">Rs {{ "%.0f"|format(total_income) }}</div>
+                    </div>
+                    <div
+                        style="background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                        <div style="font-size: 0.85rem; color: #ef4444; margin-bottom: 0.3rem;">Total Expenses</div>
+                        <div style="font-size: 1.2rem; font-weight: 600;">Rs {{ "%.0f"|format(total_expense) }}</div>
+                    </div>
+                    <div
+                        style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                        <div style="font-size: 0.85rem; color: #818cf8; margin-bottom: 0.3rem;">Net Profit</div>
+                        <div
+                            style="font-size: 1.2rem; font-weight: 600; color: {{ '#34d399' if net_profit >= 0 else '#ef4444' }};">
+                            Rs {{ "%.0f"|format(net_profit) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Table -->
+            <div class="table-scroll-wrapper" style="flex: 1; padding: 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead
+                        style="background: rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(5px);">
+                        <tr style="text-align: left;">
+                            <th style="padding: 1rem; font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">
+                                Date</th>
+                            <th style="padding: 1rem; font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">
+                                Description</th>
+                            <th
+                                style="padding: 1rem; text-align: right; font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">
+                                Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in income_txns %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td
+                                style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem; white-space: nowrap;">
+                                {{ txn.date }}</td>
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 500;">{{ txn.name }}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">{{ txn.description }}</div>
+                            </td>
+                            <td style="padding: 1rem; text-align: right; color: #34d399; font-weight: 500;">
+                                + {{ "%.0f"|format(txn.amount) }}
+                                {% if txn.type == 'Ledger' and not txn.is_void %}
                                 <a href="{{ url_for('finance.void_transaction', id=txn.id) }}"
                                     onclick="return confirm('Void this income?');" title="Void"
-                                    style="color: var(--text-muted);"><i class="fas fa-ban"></i></a>
+                                    style="color: var(--text-muted); margin-left: 0.5rem; opacity: 0.5; font-size: 0.8rem;"><i
+                                        class="fas fa-ban"></i></a>
                                 {% endif %}
-                                {% if current_user.role == 'Admin' %}
-                                <a href="{{ url_for('finance.delete_transaction', id=txn.id) }}"
-                                    onclick="return confirm('Delete permanently?');" title="Delete"
-                                    style="color: #ef4444;"><i class="fas fa-trash-alt"></i></a>
-                                {% endif %}
-                                {% else %}
-                                <!-- Guest Workshop Actions -->
-                                <a href="{{ url_for('workshops.view', id=1) }}" title="View Workshop"
-                                    style="color: var(--text-muted);"><i class="fas fa-external-link-alt"></i></a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    <!-- Expenses -->
-                    {% for exp in expenses %}
-                    <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 0.8rem; color: var(--text-muted);">{{ exp.date }}</td>
-                        <td style="padding: 0.8rem;">{{ exp.description }} ({{ exp.category }})</td>
-                        <td style="padding: 0.8rem;"><span class="badge bg-danger">Exp</span></td>
-                        <td style="padding: 0.8rem; text-align: right; color: #ef4444;">
-                            {{ "%.0f"|format(exp.amount) }}
-                            <div style="display: inline-flex; gap: 0.3rem; margin-left: 0.5rem; opacity: 0.7;">
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% for exp in expenses %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td
+                                style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem; white-space: nowrap;">
+                                {{ exp.date }}</td>
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 500;">{{ exp.category }}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">{{ exp.description }}</div>
+                            </td>
+                            <td style="padding: 1rem; text-align: right; color: #ef4444; font-weight: 500;">
+                                - {{ "%.0f"|format(exp.amount) }}
                                 {% if not exp.is_void %}
                                 <a href="{{ url_for('expenses.void_expense', id=exp.id) }}"
                                     onclick="return confirm('Void this expense?');" title="Void"
-                                    style="color: var(--text-muted);"><i class="fas fa-ban"></i></a>
+                                    style="color: var(--text-muted); margin-left: 0.5rem; opacity: 0.5; font-size: 0.8rem;"><i
+                                        class="fas fa-ban"></i></a>
                                 {% endif %}
-                                {% if current_user.role == 'Admin' %}
-                                <a href="{{ url_for('expenses.delete_expense', id=exp.id) }}"
-                                    onclick="return confirm('Delete permanently?');" title="Delete"
-                                    style="color: #ef4444;"><i class="fas fa-trash-alt"></i></a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
 
-                    {% if not income_txns and not expenses %}
-                    <tr>
-                        <td colspan="4" style="padding: 1.5rem; text-align: center;">No activity in this period.</td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+                        {% if not income_txns and not expenses %}
+                        <tr>
+                            <td colspan="3" style="padding: 3rem; text-align: center; color: var(--text-muted);">No
+                                financial activity found for this period.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RIGHT: Defaulters List -->
+        <div class="glass-card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); background: rgba(239, 68, 68, 0.05);">
+                <h3 style="margin: 0; font-size: 1.2rem; color: #ef4444;">
+                    <i class="fas fa-exclamation-triangle"></i> Pending Dues
+                </h3>
+            </div>
+
+            <div class="table-scroll-wrapper" style="flex: 1; padding: 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead
+                        style="background: rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(5px);">
+                        <tr style="text-align: left;">
+                            <th style="padding: 1rem; font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">
+                                Student</th>
+                            <th
+                                style="padding: 1rem; text-align: right; font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">
+                                Due Amount</th>
+                            <th
+                                style="padding: 1rem; text-align: center; font-weight: 500; color: var(--text-muted); font-size: 0.9rem;">
+                                Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in defaulters %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 500;">{{ student.name }}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">{{ student.phone }}</div>
+                            </td>
+                            <td style="padding: 1rem; text-align: right; font-weight: 600; color: #ef4444;">
+                                Rs {{ "%.0f"|format(student.get_balance()) }}
+                            </td>
+                            <td style="padding: 1rem; text-align: center;">
+                                <a href="https://wa.me/{{ student.phone }}?text=Namaste {{ student.name }}, Dance Academy reminder: You have pending dues of Rs {{ '%.0f'|format(student.get_balance()) }}. Please pay timely. Thank you!"
+                                    target="_blank" class="btn-icon"
+                                    style="color: #25D366; background: rgba(37, 211, 102, 0.1); width: auto; padding: 0.4rem 0.8rem; display: inline-flex; gap: 0.5rem; border-radius: 6px;">
+                                    <i class="fab fa-whatsapp"></i> <span style="font-size: 0.8rem;">Remind</span>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" style="padding: 3rem; text-align: center; color: #34d399;">
+                                <i class="fas fa-check-circle" style="font-size: 2rem; margin-bottom: 1rem;"></i><br>
+                                No pending dues!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
-    <!-- Right: Defaulters List -->
-    <div class="glass-card" style="display: flex; flex-direction: column;">
-        <h2 style="margin-bottom: 1rem; color: #ef4444;"><i class="fas fa-exclamation-circle"></i> Defaulters List</h2>
-        <p style="color: var(--text-muted); margin-bottom: 1rem;">Active students with unpaid dues.</p>
-
-        <div class="table-scroll-wrapper" style="flex: 1;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead style="position: sticky; top: 0; background: var(--bg-card);">
-                    <tr style="text-align: left; border-bottom: 1px solid var(--border);">
-                        <th style="padding: 1rem;">Student</th>
-                        <th style="padding: 1rem;">Phone</th>
-                        <th style="padding: 1rem; text-align: right;">Due Amount</th>
-                        <th style="padding: 1rem;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for student in defaulters %}
-                    <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 1rem; font-weight: 500;">{{ student.name }}</td>
-                        <td style="padding: 1rem; color: var(--text-muted);">{{ student.phone }}</td>
-                        <td style="padding: 1rem; text-align: right; color: #ef4444; font-weight: 600;">
-                            Rs {{ "%.0f"|format(student.get_balance()) }}
-                        </td>
-                        <td style="padding: 1rem; display: flex; gap: 0.5rem;">
-                            <a href="{{ url_for('finance.student_ledger', student_id=student.id) }}" class="btn-icon"
-                                title="View Ledger"><i class="fas fa-eye"></i></a>
-                            <a href="https://wa.me/{{ student.phone }}?text=Hello {{ student.name }}, this is a reminder from Dance Academy that your dues of Rs {{ student.get_balance() }} are pending. Please pay at your earliest convenience."
-                                class="btn-icon" target="_blank" title="Remind via WhatsApp" style="color: #25D366;">
-                                <i class="fab fa-whatsapp"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" style="padding: 2rem; text-align: center; color: #34d399;">No pending dues! 🎉
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
 </div>
 {% endblock %}

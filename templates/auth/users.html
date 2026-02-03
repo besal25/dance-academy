@@ -3,162 +3,202 @@
 {% block title %}User Management{% endblock %}
 
 {% block content %}
-<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: start;">
+<div class="glass-card"
+    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h3 style="margin: 0; display: flex; align-items: center; gap: 0.8rem;">
+            <i class="fas fa-users-cog" style="color: var(--primary);"></i> System Users
+        </h3>
+        <p style="color: var(--text-muted); margin: 0.3rem 0 0 0;">Manage access and permissions for staff members</p>
+    </div>
+    <button onclick="openAddUserModal()" class="btn-primary">
+        <i class="fas fa-user-plus"></i> Create New User
+    </button>
+</div>
 
-    <!-- Add User Card -->
-    <div class="glass-card">
-        <h3 style="margin-bottom: 1.5rem; color: var(--primary);"><i class="fas fa-user-plus"></i> Create New User</h3>
-        <form action="{{ url_for('auth.add_user') }}" method="POST"
-            style="display: flex; flex-direction: column; gap: 1.2rem;">
-            <div>
-                <label
-                    style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Username</label>
-                <input type="text" name="username" required>
+<!-- Active Users List -->
+<div class="glass-card" style="padding: 0; overflow: hidden;">
+    <div class="table-scroll-wrapper">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border); text-align: left; background: rgba(0,0,0,0.2);">
+                    <th style="padding: 1rem 1.5rem; color: var(--text-muted); font-size: 0.9rem;">User Profile</th>
+                    <th style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">Access Permissions</th>
+                    <th style="padding: 1rem; color: var(--text-muted); text-align: right; font-size: 0.9rem;">Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+                    <td style="padding: 1rem 1.5rem; width: 200px;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div
+                                style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 500;">{{ user.username }}</div>
+                                <div
+                                    style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;">
+                                    {{ user.role }}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <form action="{{ url_for('auth.update_permissions', id=user.id) }}" method="POST"
+                            style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            {% set perms = [
+                            ('can_manage_students', 'Students', '#34d399'),
+                            ('can_manage_classes', 'Classes', '#60a5fa'),
+                            ('can_view_attendance', 'Attendance', '#818cf8'),
+                            ('can_view_finance', 'Finance', '#fbbf24'),
+                            ('can_manage_expenses', 'Expenses', '#f87171'),
+                            ('can_view_reports', 'Reports', '#a78bfa'),
+                            ('can_manage_settings', 'Settings', '#94a3b8'),
+                            ('can_manage_workshops', 'Workshops', '#ec4899'),
+                            ('can_manage_packages', 'Packages', '#14b8a6'),
+                            ('can_manage_inventory', 'Inventory', '#f59e0b')
+                            ] %}
+
+                            {% for field, title, color in perms %}
+                            <label class="perm-tag" title="{{ title }}" style="--tag-color: {{ color if user[field] else 'var(--text-muted)' }}; 
+                                       --bg-color: {{ color + '20' if user[field] else 'rgba(255,255,255,0.05)' }};
+                                       opacity: {{ '1' if user[field] else '0.5' }};">
+                                <input type="checkbox" name="{{ field }}" {{ 'checked' if user[field] else '' }}
+                                    onchange="this.form.submit()" {{ 'disabled' if user.username=='admin' else '' }}>
+                                <span style="display:flex; align-items: center; gap: 4px;">
+                                    {% if user[field] %}<i class="fas fa-check" style="font-size: 0.7rem;"></i>{% endif
+                                    %}
+                                    {{ title }}
+                                </span>
+                            </label>
+                            {% endfor %}
+                        </form>
+                    </td>
+                    <td style="padding: 1rem; text-align: right;">
+                        {% if user.username != 'admin' and user.id != current_user.id %}
+                        <a href="{{ url_for('auth.delete_user', id=user.id) }}" class="btn-icon"
+                            style="color: #ef4444; width: auto;"
+                            onclick="return confirm('Use with CAUTION!\n\nRemove access for {{ user.username }}?');"
+                            title="Delete User">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </a>
+                        {% elif user.username == 'admin' %}
+                        <span style="color: var(--text-muted); font-size: 0.8rem;"><i class="fas fa-lock"></i>
+                            Protected</span>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">(You)</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="add-user-modal" class="modal-overlay" style="display: none;"
+    onclick="if(event.target == this) closeAddUserModal()">
+    <div class="glass-card" style="width: 500px; max-width: 90%; background: var(--bg-card); position: relative;">
+        <button onclick="closeAddUserModal()"
+            style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 style="margin-bottom: 1.5rem;">Create New User</h2>
+
+        <form action="{{ url_for('auth.add_user') }}" method="POST">
+            <div class="form-group">
+                <label>Username</label>
+                <div class="input-group">
+                    <span class="input-icon"><i class="fas fa-user"></i></span>
+                    <input type="text" name="username" required placeholder="e.g. staff_rita">
+                </div>
             </div>
 
-            <div>
-                <label
-                    style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Password</label>
-                <input type="password" name="password" required placeholder="8+ chars, letters & numbers">
+            <div class="form-group">
+                <label>Password</label>
+                <div class="input-group">
+                    <span class="input-icon"><i class="fas fa-lock"></i></span>
+                    <input type="password" name="password" required placeholder="8+ chars, letters & numbers">
+                </div>
             </div>
 
             <div
-                style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid var(--border);">
+                style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
                 <label
                     style="display: block; margin-bottom: 1rem; color: var(--primary); font-weight: 600; font-size: 0.9rem;">
-                    <i class="fas fa-shield-alt"></i> Feature Permissions
+                    Default Permissions
                 </label>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_manage_students" checked> Students & Profiles
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; font-size: 0.9rem;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="can_manage_students" checked> Students
                     </label>
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_manage_classes" checked> Classes & Instructors
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="can_manage_classes" checked> Classes
                     </label>
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_view_attendance" checked> Attendance Tracking
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="can_view_attendance" checked> Attendance
                     </label>
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_view_finance"> Global Ledger (Finance)
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="can_view_finance"> Finance (Ledger)
                     </label>
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_manage_expenses"> Expenses Management
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="can_manage_expenses"> Expenses
                     </label>
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_view_reports"> Analytics & Reports
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_manage_settings"> System Settings
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_manage_workshops"> Workshops
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_manage_packages"> Packages
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                        <input type="checkbox" name="can_manage_inventory"> Inventory/Products
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="can_view_reports"> Reports
                     </label>
                 </div>
             </div>
 
-            <button type="submit" class="btn-primary">Create User</button>
+            <button type="submit" class="btn-primary" style="width: 100%;">Create User</button>
         </form>
     </div>
-
-    <!-- Active Users List -->
-    <div class="glass-card">
-        <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-users-cog"></i> System Users</h3>
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="border-bottom: 1px solid var(--border); text-align: left;">
-                        <th style="padding: 1rem; color: var(--text-muted);">User</th>
-                        <th style="padding: 1rem; color: var(--text-muted);">Permissions</th>
-                        <th style="padding: 1rem; color: var(--text-muted); text-align: right;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                        <td style="padding: 1rem;">
-                            <div style="font-weight: 500;">{{ user.username }}</div>
-                            <div style="font-size: 0.75rem; color: var(--primary);">{{ user.role }}</div>
-                        </td>
-                        <td style="padding: 1rem;">
-                            <form action="{{ url_for('auth.update_permissions', id=user.id) }}" method="POST"
-                                style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                {% set perms = [
-                                ('can_manage_students', 'S', '#34d399', 'Students'),
-                                ('can_manage_classes', 'C', '#60a5fa', 'Classes'),
-                                ('can_view_attendance', 'A', '#818cf8', 'Attendance'),
-                                ('can_view_finance', 'F', '#fbbf24', 'Finance'),
-                                ('can_manage_expenses', 'E', '#f87171', 'Expenses'),
-                                ('can_view_reports', 'R', '#a78bfa', 'Reports'),
-                                ('can_manage_settings', 'P', '#94a3b8', 'Settings'),
-                                ('can_manage_workshops', 'W', '#ec4899', 'Workshops'),
-                                ('can_manage_packages', 'K', '#14b8a6', 'Packages'),
-                                ('can_manage_inventory', 'I', '#f59e0b', 'Inventory')
-                                ] %}
-
-                                {% for field, short, color, title in perms %}
-                                <label class="perm-badge" title="{{ title }}"
-                                    style="--badge-color: {{ color if user[field] else 'rgba(255,255,255,0.1)' }};
-                                                  --text-color: {{ 'white' if user[field] else 'var(--text-muted)' }};">
-                                    <input type="checkbox" name="{{ field }}" {{ 'checked' if user[field] else '' }}
-                                        onchange="this.form.submit()" {{ 'disabled' if user.username=='admin' else ''
-                                        }}>
-                                    <span>{{ short }}</span>
-                                </label>
-                                {% endfor %}
-                            </form>
-                        </td>
-                        <td style="padding: 1rem; text-align: right;">
-                            {% if user.username != 'admin' and user.id != current_user.id %}
-                            <a href="{{ url_for('auth.delete_user', id=user.id) }}"
-                                style="color: #f87171; font-size: 1.1rem;"
-                                onclick="return confirm('Remove access for {{ user.username }}?')">
-                                <i class="fas fa-trash-alt"></i>
-                            </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <style>
-        .perm-badge {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background: var(--badge-color);
-            color: var(--text-color);
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .perm-badge input {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .perm-badge:hover {
-            filter: brightness(1.2);
-            transform: translateY(-1px);
-        }
-    </style>
-
 </div>
+
+<script>
+    function openAddUserModal() {
+        document.getElementById('add-user-modal').style.display = 'flex';
+    }
+
+    function closeAddUserModal() {
+        document.getElementById('add-user-modal').style.display = 'none';
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', function (event) {
+        if (event.key === "Escape") {
+            closeAddUserModal();
+        }
+    });
+</script>
+
+<style>
+    .perm-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        background: var(--bg-color);
+        color: var(--tag-color);
+        border: 1px solid var(--tag-color);
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .perm-tag input {
+        display: none;
+    }
+
+    .perm-tag:hover {
+        opacity: 0.8 !important;
+        transform: translateY(-1px);
+    }
+</style>
 {% endblock %}

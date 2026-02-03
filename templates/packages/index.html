@@ -4,64 +4,339 @@
 
 {% block content %}
 <div class="glass-card"
-    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
     <div>
-        <h3 style="margin: 0;">Academy Packages</h3>
-        <p style="color: var(--text-muted); margin: 0;">Special long-term memberships with discounted rates</p>
+        <h3 style="margin: 0; display: flex; align-items: center; gap: 0.8rem;">
+            <i class="fas fa-box" style="color: var(--primary);"></i> Academy Packages
+        </h3>
+        <p style="color: var(--text-muted); margin: 0.3rem 0 0 0;">Manage long-term memberships and special offers</p>
     </div>
     {% if current_user.role == 'Admin' %}
-    <div style="display: flex; gap: 0.5rem;">
+    <div style="display: flex; gap: 0.8rem;">
+        <button onclick="openAddPackageModal()" class="btn-primary">
+            <i class="fas fa-plus"></i> Create Package
+        </button>
         <form method="post" action="{{ url_for('packages.delete_all') }}" style="display: inline;"
             onsubmit="return confirm('⚠️ DANGER: This will permanently delete ALL packages and ALL active enrollment records.\n\nType DELETE in the next prompt to confirm.') && prompt('Type DELETE to confirm:') === 'DELETE';">
             <button type="submit" class="btn-icon"
-                style="background: #dc2626; color: white; padding: 0.8rem 1.2rem; border-radius: 8px; width: auto; height: auto; text-decoration: none;"
+                style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444;"
                 title="Delete All Packages">
-                <i class="fas fa-trash-alt"></i> Delete All
+                <i class="fas fa-trash-alt"></i>
             </button>
         </form>
-        <a href="{{ url_for('packages.add') }}" class="btn-primary">
-            <i class="fas fa-plus"></i> Create Package
-        </a>
     </div>
     {% endif %}
 </div>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
     {% for package in packages %}
-    <div class="glass-card" style="display: flex; flex-direction: column; gap: 1rem;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <h4 style="margin: 0; font-size: 1.2rem; color: var(--primary);">{{ package.name }}</h4>
-            <span class="badge" style="background: rgba(52, 211, 153, 0.1); color: #34d399;">Rs {{ package.price
-                }}</span>
+    <div class="glass-card"
+        style="padding: 0; overflow: hidden; display: flex; flex-direction: column; position: relative;">
+        <!-- Card Header -->
+        <div style="padding: 1.5rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h3 style="margin: 0; font-size: 1.3rem; font-weight: 600;">{{ package.name }}</h3>
+                <div
+                    style="background: rgba(52, 211, 153, 0.1); color: #34d399; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">
+                    Rs {{ "%.0f"|format(package.price) }}
+                </div>
+            </div>
+            <div
+                style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-clock"></i> {{ package.duration_months }} Months Duration
+            </div>
         </div>
 
-        <div style="font-size: 0.9rem; color: var(--text-muted);">
-            <div style="margin-bottom: 0.3rem;"><i class="fas fa-clock" style="width: 20px;"></i> {{
-                package.duration_months }} Months</div>
-            <div><i class="fas fa-info-circle" style="width: 20px;"></i> {{ package.description or 'Standard package.'
-                }}</div>
+        <!-- Card Body -->
+        <div style="padding: 1.5rem; flex: 1;">
+            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin: 0;">
+                {{ package.description or 'No description provided.' }}
+            </p>
         </div>
 
-        <div style="margin-top: auto; display: flex; gap: 0.5rem;">
-            <a href="{{ url_for('packages.view', id=package.id) }}" class="btn-primary"
-                style="flex: 1; text-align: center; background: rgba(99, 102, 241, 0.1); color: var(--primary); border: 1px solid var(--primary);">View
-                Members</a>
-            <a href="{{ url_for('packages.enroll', id=package.id) }}" class="btn-primary"
-                style="flex: 1; text-align: center;">Enroll Student</a>
+        <!-- Card Footer Actions -->
+        <div
+            style="padding: 1rem; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); display: flex; gap: 0.8rem;">
+            <button onclick="openEnrollModal({{ package.id }}, '{{ package.name }}', {{ package.price }})"
+                class="btn-primary" style="flex: 1; justify-content: center;">
+                Enroll
+            </button>
+            <button onclick="openViewMembersModal({{ package.id }}, '{{ package.name }}')" class="btn-icon"
+                style="background: rgba(99, 102, 241, 0.1); color: var(--primary); width: auto; padding: 0 1rem;"
+                title="View Members">
+                <i class="fas fa-users"></i>
+            </button>
             {% if current_user.role == 'Admin' %}
-            <a href="{{ url_for('packages.edit', id=package.id) }}" class="btn-icon" title="Edit"><i
-                    class="fas fa-edit"></i></a>
+            <button
+                onclick="openEditPackageModal({{ package.id }}, '{{ package.name }}', {{ package.price }}, {{ package.duration_months }}, '{{ package.description|replace('\n', ' ')|replace('\'', '\\\'') }}')"
+                class="btn-icon" title="Edit">
+                <i class="fas fa-edit"></i>
+            </button>
             <a href="{{ url_for('packages.delete', id=package.id) }}" class="btn-icon" style="color: #ef4444;"
-                onclick="return confirm('Delete this package?');"><i class="fas fa-trash"></i></a>
+                onclick="return confirm('Delete {{ package.name }}? This cannot be undone.');" title="Delete">
+                <i class="fas fa-trash"></i>
+            </a>
             {% endif %}
         </div>
     </div>
     {% else %}
-    <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-        <i class="fas fa-box-open"
-            style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem; display: block;"></i>
-        <p style="color: var(--text-muted);">No packages defined yet.</p>
+    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--text-muted);">
+        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"><i class="fas fa-box-open"></i></div>
+        <p>No membership packages defined yet.</p>
+        <button onclick="openAddPackageModal()" class="btn-primary" style="margin-top: 1rem;">Create First
+            Package</button>
     </div>
     {% endfor %}
 </div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Add/Edit Package Modal -->
+<div id="package-form-modal" class="modal-overlay" style="display: none;"
+    onclick="if(event.target == this) closePackageFormModal()">
+    <div class="glass-card" style="width: 500px; max-width: 90%; background: var(--bg-card); position: relative;">
+        <button onclick="closePackageFormModal()"
+            style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 id="modal-title" style="margin-bottom: 1.5rem;">Create Package</h2>
+        <form id="package-form" method="POST" action="{{ url_for('packages.add') }}">
+
+            <div class="form-group">
+                <label>Package Name</label>
+                <div class="input-group">
+                    <span class="input-icon"><i class="fas fa-tag"></i></span>
+                    <input type="text" name="name" id="pkg-name" required placeholder="e.g. Annual Gold Membership">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Duration (Months)</label>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fas fa-clock"></i></span>
+                        <input type="number" name="duration_months" id="pkg-duration" required min="1" value="1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Price (Rs)</label>
+                    <div class="input-group">
+                        <span class="input-icon">Rs</span>
+                        <input type="number" name="price" id="pkg-price" required min="0" step="0.01">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Description (Optional)</label>
+                <textarea name="description" id="pkg-desc" rows="3"
+                    placeholder="What does this package include?"></textarea>
+            </div>
+
+            <div style="margin-top: 1.5rem; text-align: right;">
+                <button type="button" onclick="closePackageFormModal()" class="btn-secondary"
+                    style="margin-right: 0.5rem;">Cancel</button>
+                <button type="submit" class="btn-primary">Save Package</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Enroll Student Modal -->
+<div id="enroll-modal" class="modal-overlay" style="display: none;"
+    onclick="if(event.target == this) closeEnrollModal()">
+    <div class="glass-card" style="width: 500px; max-width: 90%; background: var(--bg-card); position: relative;">
+        <button onclick="closeEnrollModal()"
+            style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 style="margin-bottom: 0.5rem;">Enroll Student</h2>
+        <p id="enroll-pkg-name" style="color: var(--primary); margin-bottom: 1.5rem;"></p>
+
+        <form id="enroll-form" method="POST" action="">
+            <div class="form-group">
+                <label>Select Student</label>
+                <div class="input-group">
+                    <span class="input-icon"><i class="fas fa-user-graduate"></i></span>
+                    <select name="student_id" required
+                        style="width: 100%; padding: 0.8rem; background: transparent; border: none; color: var(--text-main); outline: none;">
+                        <option value="" style="background: var(--bg-card);">-- Search Student --</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}" style="background: var(--bg-card);">{{ student.name }} ({{
+                            student.phone }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Start Date (BS)</label>
+                <!-- Reuse existing nepali date picker logic if globally available, else standard input -->
+                <input type="text" name="start_date" class="nepali-date-picker" required placeholder="YYYY-MM-DD"
+                    value="{{ current_nepali_date }}"
+                    style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-main);">
+            </div>
+
+            <div class="form-group">
+                <label>Initial Payment (Rs)</label>
+                <div class="input-group">
+                    <span class="input-icon">Rs</span>
+                    <input type="number" name="amount_paid" id="enroll-amount" required min="0" step="0.01">
+                </div>
+                <small style="color: var(--text-muted); display: block; margin-top: 0.3rem;">Total Price: Rs <span
+                        id="enroll-total"></span></small>
+            </div>
+
+            <div class="form-group">
+                <label>Payment Deadline (Optional)</label>
+                <input type="text" name="payment_deadline" class="nepali-date-picker" placeholder="YYYY-MM-DD"
+                    style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-main);">
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="btn-primary" style="width: 100%;">Confirm Enrollment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View Members Modal -->
+<div id="members-modal" class="modal-overlay" style="display: none;"
+    onclick="if(event.target == this) closeMembersModal()">
+    <div class="glass-card"
+        style="width: 700px; max-width: 95%; background: var(--bg-card); position: relative; max-height: 85vh; display: flex; flex-direction: column;">
+        <button onclick="closeMembersModal()"
+            style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 id="members-modal-title" style="margin-bottom: 1.5rem;">Package Members</h2>
+
+        <div class="table-scroll-wrapper" style="flex: 1; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+                        <th style="padding: 1rem;">Student</th>
+                        <th style="padding: 1rem;">Dates</th>
+                        <th style="padding: 1rem;">Status</th>
+                        <th style="padding: 1rem;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="members-table-body">
+                    <!-- Populated via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Add/Edit Modal Logic ---
+    function openAddPackageModal() {
+        document.getElementById('modal-title').innerText = 'Create New Package';
+        document.getElementById('package-form').action = "{{ url_for('packages.add') }}";
+        document.getElementById('pkg-name').value = '';
+        document.getElementById('pkg-duration').value = '1';
+        document.getElementById('pkg-price').value = '';
+        document.getElementById('pkg-desc').value = '';
+        document.getElementById('package-form-modal').style.display = 'flex';
+    }
+
+    function openEditPackageModal(id, name, price, duration, desc) {
+        document.getElementById('modal-title').innerText = 'Edit Package';
+        document.getElementById('package-form').action = "/packages/edit/" + id;
+        document.getElementById('pkg-name').value = name;
+        document.getElementById('pkg-duration').value = duration;
+        document.getElementById('pkg-price').value = price;
+        document.getElementById('pkg-desc').value = desc;
+        document.getElementById('package-form-modal').style.display = 'flex';
+    }
+
+    function closePackageFormModal() {
+        document.getElementById('package-form-modal').style.display = 'none';
+    }
+
+    // --- Enroll Modal Logic ---
+    function openEnrollModal(id, name, price) {
+        document.getElementById('enroll-pkg-name').innerText = 'Enrolling in: ' + name;
+        document.getElementById('enroll-total').innerText = price;
+        document.getElementById('enroll-amount').value = price; // Default to full payment
+        document.getElementById('enroll-form').action = "/packages/enroll/" + id;
+
+        // Init Nepali Datepicker manually if needed
+        setTimeout(() => {
+            var nepaliInputs = document.querySelectorAll('.nepali-date-picker');
+            nepaliInputs.forEach(input => {
+                if (input.nepaliDatePicker) input.nepaliDatePicker();
+            });
+        }, 100);
+
+        document.getElementById('enroll-modal').style.display = 'flex';
+    }
+
+    function closeEnrollModal() {
+        document.getElementById('enroll-modal').style.display = 'none';
+    }
+
+    // --- View Members Modal Logic ---
+    function openViewMembersModal(id, name) {
+        document.getElementById('members-modal-title').innerText = name + ' Members';
+        const tbody = document.getElementById('members-table-body');
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem;">Loading...</td></tr>';
+        document.getElementById('members-modal').style.display = 'flex';
+
+        fetch(`/api/packages/${id}/members`)
+            .then(response => response.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                if (data.members.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">No students enrolled yet.</td></tr>';
+                } else {
+                    data.members.forEach(m => {
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = '1px solid var(--border)';
+                        tr.innerHTML = `
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 500;">${m.student_name}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">${m.student_phone}</div>
+                            </td>
+                            <td style="padding: 1rem; font-size: 0.9rem;">
+                                <div><span style="color: var(--text-muted);">Start:</span> ${m.start_date}</div>
+                                <div><span style="color: var(--text-muted);">End:</span> ${m.end_date}</div>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span style="padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; background: ${m.payment_status === 'Paid' ? 'rgba(52, 211, 153, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; color: ${m.payment_status === 'Paid' ? '#34d399' : '#ef4444'};">
+                                    ${m.payment_status}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <a href="/packages/enrollment/delete/${m.enrollment_id}" 
+                                   class="btn-icon" style="color: #ef4444;"
+                                   onclick="return confirm('Remove student from this package?');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #ef4444;">Failed to load members.</td></tr>';
+            });
+    }
+
+    function closeMembersModal() {
+        document.getElementById('members-modal').style.display = 'none';
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', function (event) {
+        if (event.key === "Escape") {
+            closePackageFormModal();
+            closeEnrollModal();
+            closeMembersModal();
+        }
+    });
+</script>
 {% endblock %}

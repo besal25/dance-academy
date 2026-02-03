@@ -3,95 +3,193 @@
 {% block title %}Attendance Manager{% endblock %}
 
 {% block content %}
-<div class="glass-card" style="margin-bottom: 2rem;">
-    <form action="{{ url_for('attendance.index') }}" method="post" style="display: flex; gap: 1rem; align-items: end;">
-        <div style="flex: 1;">
-            <label style="display: block; margin-bottom: 0.5rem;">Select Class</label>
-            <select name="class_id" required>
-                <option value="">-- Choose Class --</option>
-                {% for c in classes %}
-                <option value="{{ c.id }}" {{ 'selected' if selected_class and selected_class.id==c.id else '' }}>{{
-                    c.name }}</option>
-                {% endfor %}
-            </select>
+<div class="glass-card" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 style="margin: 0; display: flex; align-items: center; gap: 0.8rem;">
+                <i class="fas fa-calendar-check" style="color: var(--primary);"></i> Daily Attendance
+            </h3>
+            <p style="color: var(--text-muted); margin: 0.3rem 0 0 0;">Mark attendance for your classes</p>
         </div>
-        <div style="width: 200px;">
-            <label style="display: block; margin-bottom: 0.5rem;">Date</label>
-            <div class="col-md-3">
-                <input type="text" name="date" class="form-control nepali-date-picker" value="{{ date }}"
-                    placeholder="YYYY-MM-DD (e.g., 2081-01-01)">
+        {% if selected_class and date %}
+        <div style="text-align: right;">
+            <div style="font-size: 1.1rem; font-weight: 600;">{{ selected_class.name }}</div>
+            <div style="color: var(--text-muted); font-size: 0.9rem;"><i class="fas fa-calendar-alt"></i> {{ date }}
             </div>
         </div>
-        <button type="submit" class="btn-primary">Load Sheet</button>
+        {% endif %}
+    </div>
+
+    <!-- Selection Form -->
+    <form action="{{ url_for('attendance.index') }}" method="post"
+        style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1.5rem; align-items: end; padding-top: 1rem; border-top: 1px solid var(--border);">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label style="margin-bottom: 0.5rem; display: block; color: var(--text-muted);">Select Class</label>
+            <div class="input-group">
+                <span class="input-icon"><i class="fas fa-chalkboard-teacher"></i></span>
+                <select name="class_id" required
+                    style="width: 100%; padding: 0.8rem; background: transparent; border: none; color: var(--text-main); outline: none;">
+                    <option value="" style="background: var(--bg-card);">-- Choose Class --</option>
+                    {% for c in classes %}
+                    <option value="{{ c.id }}" {{ 'selected' if selected_class and selected_class.id==c.id else '' }}
+                        style="background: var(--bg-card);">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label style="margin-bottom: 0.5rem; display: block; color: var(--text-muted);">Date (BS)</label>
+            <input type="text" name="date" class="nepali-date-picker" value="{{ date }}" placeholder="YYYY-MM-DD"
+                style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-main);">
+        </div>
+        <button type="submit" class="btn-primary" style="height: 48px;">
+            <i class="fas fa-search"></i> Load Sheet
+        </button>
     </form>
 </div>
 
 {% if selected_class %}
-<div class="glass-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h3>{{ selected_class.name }} - {{ date }}</h3>
-        <span style="color: var(--text-muted);">{{ students|length }} Students Enrolled</span>
+<form action="{{ url_for('attendance.mark') }}" method="post">
+    <input type="hidden" name="class_id" value="{{ selected_class.id }}">
+    <input type="hidden" name="date" value="{{ date }}">
+
+    <div class="glass-card" style="padding: 0; overflow: hidden;">
+        <div
+            style="padding: 1rem 1.5rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-weight: 600;">Student List ({{ students|length }})</div>
+            <div style="font-size: 0.9rem; color: var(--text-muted);">
+                Default is <span style="color: #ef4444; font-weight: 600;">Absent</span> if unmarked.
+            </div>
+        </div>
+
+        <div class="table-scroll-wrapper">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align: left; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.1);">
+                        <th style="padding: 1rem 1.5rem;">Student Name</th>
+                        <th style="padding: 1rem;">Actions (Status)</th>
+                        <th style="padding: 1rem;">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+                        <td style="padding: 1rem 1.5rem;">
+                            <div style="font-weight: 500;">{{ student.name }}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ student.phone }}</div>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <div class="attendance-toggle-group">
+                                <label class="toggle-btn present">
+                                    <input type="radio" name="status_{{ student.id }}" value="Present" {{ 'checked' if
+                                        student.attendance_status=='Present' else '' }}>
+                                    <span>Present</span>
+                                </label>
+                                <label class="toggle-btn late">
+                                    <input type="radio" name="status_{{ student.id }}" value="Late" {{ 'checked' if
+                                        student.attendance_status=='Late' else '' }}>
+                                    <span>Late</span>
+                                </label>
+                                <label class="toggle-btn absent">
+                                    <input type="radio" name="status_{{ student.id }}" value="Absent" {{ 'checked' if
+                                        student.attendance_status=='Absent' or not student.attendance_status else '' }}>
+                                    <span>Absent</span>
+                                </label>
+                            </div>
+                        </td>
+                        <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                            <!-- Placeholder for remarks if needed later -->
+                            <i class="fas fa-comment-alt" style="opacity: 0.3;"></i>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                            No students enrolled in this class.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <form action="{{ url_for('attendance.mark') }}" method="post">
-        <input type="hidden" name="class_id" value="{{ selected_class.id }}">
-        <input type="hidden" name="date" value="{{ date }}">
+    <!-- Sticky Bottom Bar for Actions -->
+    <div
+        style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem; position: sticky; bottom: 1rem; z-index: 100;">
+        <a href="{{ url_for('reports.export_attendance', class_id=selected_class.id, date=date) }}"
+            class="btn-secondary"
+            style="background: var(--bg-card); border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <i class="fas fa-file-csv"></i> Export CSV
+        </a>
+        {% if is_future %}
+        <button type="button" disabled class="btn-primary"
+            style="opacity: 0.6; cursor: not-allowed; background: var(--text-muted);">
+            Cannot Mark Future
+        </button>
+        {% else %}
+        <button type="submit" class="btn-primary"
+            style="box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); padding: 0.8rem 2rem;">
+            <i class="fas fa-save"></i> Save Attendance
+        </button>
+        {% endif %}
+    </div>
+</form>
 
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="text-align: left; border-bottom: 1px solid var(--border);">
-                    <th style="padding: 1rem;">Student Name</th>
-                    <th style="padding: 1rem;">Phone</th>
-                    <th style="padding: 1rem; text-align: center;">Present</th>
-                    <th style="padding: 1rem; text-align: center;">Absent</th>
-                    <th style="padding: 1rem; text-align: center;">Late</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
-                <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 1rem; font-weight: 500;">{{ student.name }}</td>
-                    <td style="padding: 1rem; color: var(--text-muted);">{{ student.phone }}</td>
+<style>
+    /* Custom Toggle Button Styles */
+    .attendance-toggle-group {
+        display: inline-flex;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 4px;
+        gap: 4px;
+    }
 
-                    <td style="padding: 1rem; text-align: center;">
-                        <input type="radio" name="status_{{ student.id }}" value="Present" {{ 'checked' if
-                            student.attendance_status=='Present' else '' }}
-                            style="width: 20px; height: 20px; accent-color: #34d399;">
-                    </td>
-                    <td style="padding: 1rem; text-align: center;">
-                        <input type="radio" name="status_{{ student.id }}" value="Absent" {{ 'checked' if
-                            student.attendance_status=='Absent' or not student.attendance_status else '' }}
-                            style="width: 20px; height: 20px; accent-color: #ef4444;">
-                    </td>
-                    <td style="padding: 1rem; text-align: center;">
-                        <input type="radio" name="status_{{ student.id }}" value="Late" {{ 'checked' if
-                            student.attendance_status=='Late' else '' }}
-                            style="width: 20px; height: 20px; accent-color: #f59e0b;">
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="5" style="padding: 2rem; text-align: center;">No students enrolled in this class.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    .toggle-btn {
+        position: relative;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        transition: all 0.2s;
+        user-select: none;
+    }
 
-        <div style="margin-top: 2rem; text-align: right; display: flex; justify-content: flex-end; gap: 1rem;">
-            {% if is_future %}
-            <div
-                style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.8rem 1.2rem; border-radius: 8px; font-weight: 500;">
-                <i class="fas fa-exclamation-triangle"></i> Attendance cannot be taken for future dates.
-            </div>
-            {% else %}
-            <button type="submit" class="btn-primary">Save Attendance</button>
-            {% endif %}
-            <a href="{{ url_for('reports.export_attendance', class_id=selected_class.id if selected_class else None, date=date) }}"
-                class="btn-secondary"
-                style="text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 0.25rem; display: inline-block;">Export
-                CSV</a>
-        </div>
-    </form>
-</div>
+    .toggle-btn input {
+        display: none;
+    }
+
+    /* Present */
+    .toggle-btn.present:has(input:checked) {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        box-shadow: 0 0 0 1px #34d399;
+    }
+
+    /* Late */
+    .toggle-btn.late:has(input:checked) {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+        box-shadow: 0 0 0 1px #f59e0b;
+    }
+
+    /* Absent */
+    .toggle-btn.absent:has(input:checked) {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        box-shadow: 0 0 0 1px #ef4444;
+    }
+
+    /* Hover effects */
+    .toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+</style>
 {% endif %}
 {% endblock %}

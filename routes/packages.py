@@ -11,7 +11,25 @@ packages_bp = Blueprint('packages', __name__)
 @login_required
 def index():
     packages = Package.query.all()
-    return render_template('packages/index.html', packages=packages)
+    # Pass students for the Enrollment Modal
+    students = Student.query.filter_by(status='Active').all()
+    return render_template('packages/index.html', packages=packages, students=students)
+
+@packages_bp.route('/api/packages/<int:id>/members')
+@login_required
+def get_package_members(id):
+    enrollments = PackageEnrollment.query.filter_by(package_id=id).all()
+    data = []
+    for e in enrollments:
+        data.append({
+            'student_name': e.student.name,
+            'student_phone': e.student.phone,
+            'start_date': e.start_date,
+            'end_date': e.end_date,
+            'payment_status': 'Paid' if e.amount_paid >= e.total_price else 'Due', # Simple logic
+            'enrollment_id': e.id
+        })
+    return {'members': data}
 
 @packages_bp.route('/packages/add', methods=['GET', 'POST'])
 @login_required
