@@ -17,128 +17,199 @@
         const discDiv = document.getElementById('discount_div');
         const fixedDiv = document.getElementById('fixed_amount_div');
 
-        discDiv.style.display = (value === 'Percentage') ? 'block' : 'none';
-        fixedDiv.style.display = (value === 'Fixed') ? 'block' : 'none';
+        if (discDiv) discDiv.style.display = (value === 'Percentage') ? 'block' : 'none';
+        if (fixedDiv) fixedDiv.style.display = (value === 'Fixed') ? 'block' : 'none';
     }
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="glass-card" style="max-width: 600px; margin: 0 auto;">
-    <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1.5rem;">
+<div style="max-width: 800px; margin: 0 auto;">
+    <h2 style="margin-bottom: 1.5rem; text-align: center; color: var(--text-main);">
+        <i class="fas fa-user-graduate" style="color: var(--primary); margin-right: 0.5rem;"></i>
+        {{ 'Edit Student' if student else 'Register New Student' }}
+    </h2>
 
-        <div style="text-align: center; margin-bottom: 1rem;">
-            <div id="photo-preview-container"
-                style="width: 120px; height: 120px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--border); margin: 0 auto 1rem; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
-                {% if student and student.photo_path %}
-                <img src="{{ url_for('static', filename=student.photo_path) }}"
-                    style="width: 100%; height: 100%; object-fit: cover;">
-                {% else %}
-                <i class="fas fa-user" style="font-size: 3rem; color: var(--text-muted);"></i>
+    <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 2rem;">
+
+        <!-- Section 1: Identity -->
+        <div class="glass-card" style="padding: 2rem;">
+            <h4
+                style="margin-top: 0; margin-bottom: 1.5rem; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                <i class="fas fa-id-card"></i> Identity & Photo
+            </h4>
+
+            <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap;">
+                <!-- Photo Upload with Preview -->
+                <div style="flex: 0 0 auto; text-align: center;">
+                    <div id="photo-preview-container"
+                        style="width: 140px; height: 140px; border-radius: 50%; background: var(--bg-dark); border: 2px dashed var(--border); margin: 0 auto 1rem; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
+                        {% if student and student.photo_path %}
+                        <img src="{{ url_for('static', filename=student.photo_path) }}"
+                            style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <i class="fas fa-camera" style="font-size: 2.5rem; color: var(--text-muted); opacity: 0.5;"></i>
+                        {% endif %}
+                    </div>
+                    <label class="btn-primary"
+                        style="background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem 1rem; font-size: 0.9rem;">
+                        <i class="fas fa-upload"></i> Upload
+                        <input type="file" name="photo" accept="image/*" style="display: none;"
+                            onchange="previewImage(this)">
+                    </label>
+                </div>
+
+                <!-- Basic Info -->
+                <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label
+                            style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Full
+                            Name *</label>
+                        <input type="text" name="name" value="{{ student.name if student else '' }}" required
+                            placeholder="e.g. Aarav Sharma" style="font-size: 1.1rem; padding: 1rem;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label
+                                style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Date
+                                of Birth (BS)</label>
+                            <input type="text" name="dob" class="nepali-date-picker" value="{{ student.dob or '' }}"
+                                placeholder="YYYY-MM-DD">
+                        </div>
+
+                        <div>
+                            <label
+                                style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Status</label>
+                            <select name="status" style="width: 100%;">
+                                <option value="Active" {{ 'selected' if student and student.status=='Active'
+                                    else 'selected' }}>Active</option>
+                                <option value="Inactive" {{ 'selected' if student and student.status=='Inactive' else ''
+                                    }}>Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Contact Info -->
+        <div class="glass-card" style="padding: 2rem;">
+            <h4
+                style="margin-top: 0; margin-bottom: 1.5rem; color: var(--secondary); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                <i class="fas fa-address-book"></i> Contact Details
+            </h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div>
+                    <label
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Student
+                        Phone *</label>
+                    <input type="tel" name="phone" value="{{ student.phone if student else '' }}" required
+                        placeholder="98XXXXXXXX">
+                </div>
+                <div>
+                    <label
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Emergency
+                        Contact</label>
+                    <input type="tel" name="emergency_contact"
+                        value="{{ student.emergency_contact if student else '' }}" placeholder="Sister/Brother/etc.">
+                </div>
+                <div>
+                    <label
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Guardian
+                        Name</label>
+                    <input type="text" name="guardian_name" value="{{ student.guardian_name if student else '' }}"
+                        placeholder="Parent's Name">
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Financials -->
+        <div class="glass-card" style="padding: 2rem;">
+            <h4
+                style="margin-top: 0; margin-bottom: 1.5rem; color: #10b981; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                <i class="fas fa-coins"></i> Financial Settings
+            </h4>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Monthly
+                    Fee (Rs)</label>
+                <div style="position: relative;">
+                    <span
+                        style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);">Rs</span>
+                    <input type="number" name="custom_monthly_fee"
+                        value="{{ student.custom_monthly_fee if student else '5000' }}" step="100"
+                        style="padding-left: 2.5rem; font-size: 1.1rem; font-weight: 600;">
+                </div>
+            </div>
+
+            <div
+                style="background: rgba(255, 255, 255, 0.03); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--border);">
+                <label
+                    style="display: block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">Admission
+                    Scheme</label>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div>
+                        <select name="admission_fee_type" onchange="toggleDiscount(this.value)" style="width: 100%;">
+                            <option value="Normal" {{ 'selected' if student and student.admission_fee_type=='Normal'
+                                else '' }}>Normal Admission</option>
+                            <option value="Scholarship" {{ 'selected' if student and
+                                student.admission_fee_type=='Scholarship' else '' }}>Full Scholarship</option>
+                            <option value="Percentage" {{ 'selected' if student and
+                                student.admission_fee_type=='Percentage' else '' }}>Percentage Discount</option>
+                            <option value="Fixed" {{ 'selected' if student and student.admission_fee_type=='Fixed'
+                                else '' }}>Custom Fixed Fee</option>
+                        </select>
+                    </div>
+
+                    <div id="discount_div"
+                        style="{{ 'display: block;' if student and student.admission_fee_type=='Percentage' else 'display: none;' }}">
+                        <div style="position: relative;">
+                            <input type="number" name="admission_discount_percent"
+                                value="{{ student.admission_discount_percent if student else '0' }}" min="0" max="100"
+                                placeholder="Discount %">
+                            <span
+                                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);">%</span>
+                        </div>
+                    </div>
+
+                    <div id="fixed_amount_div"
+                        style="{{ 'display: block;' if student and student.admission_fee_type=='Fixed' else 'display: none;' }}">
+                        <div style="position: relative;">
+                            <span
+                                style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);">Rs</span>
+                            <input type="number" name="custom_admission_fee"
+                                value="{{ student.custom_admission_fee if student else '0' }}" min="0"
+                                placeholder="Fixed Amount" style="padding-left: 2.5rem;">
+                        </div>
+                    </div>
+                </div>
+
+                {% if student and student.status == 'Inactive' %}
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <label class="checkbox-container"
+                        style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer;">
+                        <input type="checkbox" name="charge_readmission" value="yes"
+                            style="width: 1.2rem; height: 1.2rem;">
+                        <span style="color: var(--warning);">Charge Re-admission Fee? (50% of Admission)</span>
+                    </label>
+                </div>
                 {% endif %}
             </div>
-            <label class="btn-primary"
-                style="background: rgba(99, 102, 241, 0.1); border: 1px dashed var(--primary); color: var(--primary); cursor: pointer; display: inline-block; padding: 0.5rem 1rem;">
-                <i class="fas fa-camera"></i> {{ 'Change Photo' if student and student.photo_path else 'Upload Photo' }}
-                <input type="file" name="photo" accept="image/*" style="display: none;" onchange="previewImage(this)">
-            </label>
         </div>
 
-        <div>
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Full Name</label>
-            <input type="text" name="name" value="{{ student.name if student else '' }}" required>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Phone Number</label>
-                <input type="text" name="phone" value="{{ student.phone if student else '' }}" required>
-            </div>
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Date of Birth
-                    (BS)</label>
-                <input type="text" name="dob" class="nepali-date-picker" value="{{ student.dob or '' }}"
-                    placeholder="YYYY-MM-DD (e.g., 2081-01-01)">
-            </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Guardian Name</label>
-                <input type="text" name="guardian_name" value="{{ student.guardian_name if student else '' }}">
-            </div>
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Emergency
-                    Contact</label>
-                <input type="text" name="emergency_contact" value="{{ student.emergency_contact if student else '' }}">
-            </div>
-        </div>
-
-        <div>
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Monthly Fee (Rs)</label>
-            <input type="number" name="custom_monthly_fee"
-                value="{{ student.custom_monthly_fee if student else '5000' }}" step="100">
-        </div>
-
-        <div
-            style="padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid var(--border);">
-            <h4 style="margin-top: 0; margin-bottom: 1rem; color: var(--primary);">Admission Details</h4>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Admission
-                        Type</label>
-                    <select name="admission_fee_type" onchange="toggleDiscount(this.value)">
-                        <option value="Normal" {{ 'selected' if student and student.admission_fee_type=='Normal' else ''
-                            }}>Normal</option>
-                        <option value="Scholarship" {{ 'selected' if student and
-                            student.admission_fee_type=='Scholarship' else '' }}>Full Scholarship</option>
-                        <option value="Percentage" {{ 'selected' if student and student.admission_fee_type=='Percentage'
-                            else '' }}>Percentage Discount</option>
-                        <option value="Fixed" {{ 'selected' if student and student.admission_fee_type=='Fixed' else ''
-                            }}>Custom Fixed Amount</option>
-                    </select>
-                </div>
-                <div id="discount_div"
-                    style="{{ 'display: block;' if student and student.admission_fee_type=='Percentage' else 'display: none;' }}">
-                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Discount (%)</label>
-                    <input type="number" name="admission_discount_percent"
-                        value="{{ student.admission_discount_percent if student else '0' }}" min="0" max="100">
-                </div>
-                <div id="fixed_amount_div"
-                    style="{{ 'display: block;' if student and student.admission_fee_type=='Fixed' else 'display: none;' }}">
-                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Fixed Amount
-                        (Rs)</label>
-                    <input type="number" name="custom_admission_fee"
-                        value="{{ student.custom_admission_fee if student else '0' }}" min="0">
-                </div>
-            </div>
-
-            {% if student and student.status == 'Inactive' %}
-            <div id="readmission_div">
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                    <input type="checkbox" name="charge_readmission" value="yes">
-                    <span>Charge Re-admission Fee (50%)</span>
-                </label>
-            </div>
-            {% endif %}
-        </div>
-
-        {% if student %}
-        <div>
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Status</label>
-            <select name="status">
-                <option value="Active" {{ 'selected' if student.status=='Active' else '' }}>Active</option>
-                <option value="Inactive" {{ 'selected' if student.status=='Inactive' else '' }}>Inactive</option>
-            </select>
-        </div>
-        {% endif %}
-
-        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <button type="submit" class="btn-primary">{{ 'Update Student' if student else 'Add Student' }}</button>
+        <!-- Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
             <a href="{{ url_for('students.index') }}"
-                style="padding: 0.8rem 1.5rem; color: var(--text-muted); text-decoration: none;">Cancel</a>
+                style="padding: 1rem 2rem; color: var(--text-muted); text-decoration: none; font-weight: 500;">Cancel</a>
+            <button type="submit" class="btn-primary"
+                style="padding: 1rem 3rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-check"></i> {{ 'Save Changes' if student else 'Register Student' }}
+            </button>
         </div>
+
     </form>
 </div>
 {% endblock %}
