@@ -135,7 +135,10 @@ def add_user():
         can_view_finance = 'can_view_finance' in request.form,
         can_manage_expenses = 'can_manage_expenses' in request.form,
         can_view_reports = 'can_view_reports' in request.form,
-        can_manage_settings = 'can_manage_settings' in request.form
+        can_manage_settings = 'can_manage_settings' in request.form,
+        can_manage_workshops = 'can_manage_workshops' in request.form,
+        can_manage_packages = 'can_manage_packages' in request.form,
+        can_manage_inventory = 'can_manage_inventory' in request.form
     )
     db.session.add(new_user)
     db.session.commit()
@@ -158,6 +161,9 @@ def update_permissions(id):
     user.can_manage_expenses = 'can_manage_expenses' in request.form
     user.can_view_reports = 'can_view_reports' in request.form
     user.can_manage_settings = 'can_manage_settings' in request.form
+    user.can_manage_workshops = 'can_manage_workshops' in request.form
+    user.can_manage_packages = 'can_manage_packages' in request.form
+    user.can_manage_inventory = 'can_manage_inventory' in request.form
     
     db.session.commit()
     flash(f'Permissions updated for {user.username}', 'success')

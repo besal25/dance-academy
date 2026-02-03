@@ -4,31 +4,36 @@
 
 {% block content %}
 <div class="glass-card" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1.5rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
             <h3 style="margin: 0; display: flex; align-items: center; gap: 0.8rem;">
                 <i class="fas fa-calendar-check" style="color: var(--primary);"></i> Daily Attendance
             </h3>
-            <p style="color: var(--text-muted); margin: 0.3rem 0 0 0;">Mark attendance for your classes</p>
+            <p style="color: var(--text-muted); margin: 0.3rem 0 0 0;">Track daily student participation</p>
         </div>
+
         {% if selected_class and date %}
-        <div style="text-align: right;">
-            <div style="font-size: 1.1rem; font-weight: 600;">{{ selected_class.name }}</div>
-            <div style="color: var(--text-muted); font-size: 0.9rem;"><i class="fas fa-calendar-alt"></i> {{ date }}
+        <div
+            style="background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 12px; text-align: right; border: 1px solid var(--border);">
+            <div style="font-size: 1.1rem; font-weight: 600; color: var(--primary);">{{ selected_class.name }}</div>
+            <div
+                style="color: var(--text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end;">
+                <i class="fas fa-clock"></i> {{ date }}
             </div>
         </div>
         {% endif %}
     </div>
 
     <!-- Selection Form -->
-    <form action="{{ url_for('attendance.index') }}" method="post"
+    <form id="filter-form" action="{{ url_for('attendance.index') }}" method="post"
         style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1.5rem; align-items: end; padding-top: 1rem; border-top: 1px solid var(--border);">
+
         <div class="form-group" style="margin-bottom: 0;">
             <label style="margin-bottom: 0.5rem; display: block; color: var(--text-muted);">Select Class</label>
             <div class="input-group">
                 <span class="input-icon"><i class="fas fa-chalkboard-teacher"></i></span>
-                <select name="class_id" required
-                    style="width: 100%; padding: 0.8rem; background: transparent; border: none; color: var(--text-main); outline: none;">
+                <select name="class_id" required onchange="this.form.submit()"
+                    style="width: 100%; padding: 0.8rem; background: transparent; border: none; color: var(--text-main); outline: none; cursor: pointer;">
                     <option value="" style="background: var(--bg-card);">-- Choose Class --</option>
                     {% for c in classes %}
                     <option value="{{ c.id }}" {{ 'selected' if selected_class and selected_class.id==c.id else '' }}
@@ -37,113 +42,196 @@
                 </select>
             </div>
         </div>
+
         <div class="form-group" style="margin-bottom: 0;">
             <label style="margin-bottom: 0.5rem; display: block; color: var(--text-muted);">Date (BS)</label>
-            <input type="text" name="date" class="nepali-date-picker" value="{{ date }}" placeholder="YYYY-MM-DD"
-                style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-main);">
+            <div style="display: flex; gap: 0.5rem;">
+                <!-- Date Navigation logic would require JS with Nepali Date converter, kept simple for now as manual input is standard -->
+                <!-- Ideally, we'd add < > arrows if we had a reliable BS date addition library in JS -->
+                <div class="input-group" style="flex: 1;">
+                    <span class="input-icon"><i class="fas fa-calendar-alt"></i></span>
+                    <input type="text" name="date" class="nepali-date-picker" value="{{ date }}"
+                        placeholder="YYYY-MM-DD"
+                        style="width: 100%; padding: 0.8rem; background: transparent; border: none; color: var(--text-main); outline: none;">
+                </div>
+                <button type="submit" class="btn-secondary" style="background: rgba(255,255,255,0.05);">
+                    Go
+                </button>
+            </div>
         </div>
-        <button type="submit" class="btn-primary" style="height: 48px;">
-            <i class="fas fa-search"></i> Load Sheet
-        </button>
+
+        <div>
+            <!-- Empty placeholder aligned with grid -->
+        </div>
     </form>
 </div>
 
 {% if selected_class %}
-<form action="{{ url_for('attendance.mark') }}" method="post">
+<form action="{{ url_for('attendance.mark') }}" method="post" id="attendance-form">
     <input type="hidden" name="class_id" value="{{ selected_class.id }}">
     <input type="hidden" name="date" value="{{ date }}">
 
-    <div class="glass-card" style="padding: 0; overflow: hidden;">
+    <div class="glass-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+
+        <!-- Toolbar -->
         <div
-            style="padding: 1rem 1.5rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-weight: 600;">Student List ({{ students|length }})</div>
-            <div style="font-size: 0.9rem; color: var(--text-muted);">
-                Default is <span style="color: #ef4444; font-weight: 600;">Absent</span> if unmarked.
+            style="padding: 1rem 1.5rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-weight: 600; font-size: 1.1rem;">Student List <span
+                        style="color: var(--text-muted); font-size: 0.9rem;">({{ students|length }})</span></span>
+                {% if not is_future %}
+                <button type="button" onclick="markAllPresent()" class="btn-secondary"
+                    style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+                    <i class="fas fa-check-double" style="color: #34d399;"></i> Mark All Present
+                </button>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; gap: 1.5rem; font-size: 0.9rem;">
+                <span class="stat-pill" style="color: #34d399; background: rgba(52, 211, 153, 0.1);">
+                    <span id="count-present">0</span> Present
+                </span>
+                <span class="stat-pill" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);">
+                    <span id="count-late">0</span> Late
+                </span>
+                <span class="stat-pill" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);">
+                    <span id="count-absent">0</span> Absent
+                </span>
             </div>
         </div>
 
-        <div class="table-scroll-wrapper">
+        <div class="table-scroll-wrapper" style="max-height: 60vh;">
             <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="text-align: left; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.1);">
-                        <th style="padding: 1rem 1.5rem;">Student Name</th>
-                        <th style="padding: 1rem;">Actions (Status)</th>
+                <thead
+                    style="background: rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(5px);">
+                    <tr style="text-align: left;">
+                        <th style="padding: 1rem 1.5rem;">Student Profile</th>
+                        <th style="padding: 1rem;">Status</th>
                         <th style="padding: 1rem;">Remarks</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for student in students %}
-                    <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
-                        <td style="padding: 1rem 1.5rem;">
-                            <div style="font-weight: 500;">{{ student.name }}</div>
-                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ student.phone }}</div>
+                    <tr class="student-row"
+                        style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+                        <td style="padding: 0.8rem 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <!-- Avatar Placeholder -->
+                                <div
+                                    style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--primary); border: 1px solid rgba(255,255,255,0.1);">
+                                    {% if student.photo_path %}
+                                    <!-- If real photo exists, we could use it here. For now, Initials -->
+                                    <img src="{{ url_for('static', filename=student.photo_path) }}" alt=""
+                                        style="width:100%; height:100%; object-fit: cover; border-radius: 50%;">
+                                    {% else %}
+                                    {{ student.name[:1] }}
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500; font-size: 1rem;">{{ student.name }}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ student.phone }}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td style="padding: 1rem;">
+                        <td style="padding: 0.8rem 1rem;">
                             <div class="attendance-toggle-group">
                                 <label class="toggle-btn present">
-                                    <input type="radio" name="status_{{ student.id }}" value="Present" {{ 'checked' if
-                                        student.attendance_status=='Present' else '' }}>
+                                    <input type="radio" name="status_{{ student.id }}" value="Present"
+                                        onchange="updateStats()" {{ 'checked' if student.attendance_status=='Present'
+                                        else '' }}>
                                     <span>Present</span>
                                 </label>
                                 <label class="toggle-btn late">
-                                    <input type="radio" name="status_{{ student.id }}" value="Late" {{ 'checked' if
-                                        student.attendance_status=='Late' else '' }}>
+                                    <input type="radio" name="status_{{ student.id }}" value="Late"
+                                        onchange="updateStats()" {{ 'checked' if student.attendance_status=='Late'
+                                        else '' }}>
                                     <span>Late</span>
                                 </label>
                                 <label class="toggle-btn absent">
-                                    <input type="radio" name="status_{{ student.id }}" value="Absent" {{ 'checked' if
-                                        student.attendance_status=='Absent' or not student.attendance_status else '' }}>
+                                    <input type="radio" name="status_{{ student.id }}" value="Absent"
+                                        onchange="updateStats()" {{ 'checked' if student.attendance_status=='Absent' or
+                                        not student.attendance_status else '' }}>
                                     <span>Absent</span>
                                 </label>
                             </div>
                         </td>
-                        <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-                            <!-- Placeholder for remarks if needed later -->
-                            <i class="fas fa-comment-alt" style="opacity: 0.3;"></i>
+                        <td style="padding: 0.8rem 1rem;">
+                            <!-- Adding a subtle note here to fill space, or could be an input -->
+                            <div style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; transition: all 0.2s;"
+                                class="hover-bg">
+                                <i class="far fa-comment-dots"></i>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="3" style="padding: 3rem; text-align: center; color: var(--text-muted);">
-                            No students enrolled in this class.
+                        <td colspan="3" style="padding: 4rem; text-align: center; color: var(--text-muted);">
+                            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"><i
+                                    class="fas fa-user-slash"></i></div>
+                            No students enrolled in this class yet.
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <!-- Sticky Bottom Bar for Actions -->
-    <div
-        style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem; position: sticky; bottom: 1rem; z-index: 100;">
-        <a href="{{ url_for('reports.export_attendance', class_id=selected_class.id, date=date) }}"
-            class="btn-secondary"
-            style="background: var(--bg-card); border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <i class="fas fa-file-csv"></i> Export CSV
-        </a>
-        {% if is_future %}
-        <button type="button" disabled class="btn-primary"
-            style="opacity: 0.6; cursor: not-allowed; background: var(--text-muted);">
-            Cannot Mark Future
-        </button>
-        {% else %}
-        <button type="submit" class="btn-primary"
-            style="box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); padding: 0.8rem 2rem;">
-            <i class="fas fa-save"></i> Save Attendance
-        </button>
-        {% endif %}
+        <!-- Save Bar -->
+        <div
+            style="padding: 1rem 1.5rem; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('reports.export_attendance', class_id=selected_class.id, date=date) }}"
+                class="btn-secondary" style="font-size: 0.9rem;">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+
+            {% if is_future %}
+            <button type="button" disabled class="btn-primary"
+                style="opacity: 0.6; cursor: not-allowed; background: var(--text-muted);">
+                Cannot Mark Future Date
+            </button>
+            {% else %}
+            <button type="submit" class="btn-primary"
+                style="padding: 0.8rem 2.5rem; font-size: 1rem; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);">
+                Save Attendance <i class="fas fa-save" style="margin-left: 0.5rem;"></i>
+            </button>
+            {% endif %}
+        </div>
     </div>
 </form>
 
+<script>
+    function markAllPresent() {
+        const presents = document.querySelectorAll('input[value="Present"]');
+        presents.forEach(cb => {
+            cb.checked = true;
+        });
+        updateStats();
+    }
+
+    function updateStats() {
+        // Count checked radios
+        const presents = document.querySelectorAll('input[value="Present"]:checked').length;
+        const lates = document.querySelectorAll('input[value="Late"]:checked').length;
+        const absents = document.querySelectorAll('input[value="Absent"]:checked').length;
+
+        document.getElementById('count-present').innerText = presents;
+        document.getElementById('count-late').innerText = lates;
+        document.getElementById('count-absent').innerText = absents;
+    }
+
+    // Run on load
+    document.addEventListener('DOMContentLoaded', updateStats);
+</script>
+
 <style>
-    /* Custom Toggle Button Styles */
+    /* Custom Toggle Button Styles Refined */
     .attendance-toggle-group {
         display: inline-flex;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.2);
         border-radius: 8px;
-        padding: 4px;
-        gap: 4px;
+        padding: 3px;
+        gap: 2px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .toggle-btn {
@@ -152,12 +240,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 6px 16px;
+        padding: 8px 20px;
         border-radius: 6px;
         font-size: 0.9rem;
         font-weight: 500;
         color: var(--text-muted);
-        transition: all 0.2s;
+        transition: all 0.2s ease;
         user-select: none;
     }
 
@@ -166,29 +254,59 @@
     }
 
     /* Present */
-    .toggle-btn.present:has(input:checked) {
-        background: rgba(16, 185, 129, 0.2);
+    .toggle-btn.present:hover {
         color: #34d399;
-        box-shadow: 0 0 0 1px #34d399;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .toggle-btn.present:has(input:checked) {
+        background: #34d399;
+        color: #064e3b;
+        /* Dark text on bright bg for contrast */
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
     }
 
     /* Late */
-    .toggle-btn.late:has(input:checked) {
-        background: rgba(245, 158, 11, 0.2);
+    .toggle-btn.late:hover {
         color: #f59e0b;
-        box-shadow: 0 0 0 1px #f59e0b;
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .toggle-btn.late:has(input:checked) {
+        background: #f59e0b;
+        color: #451a03;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(245, 158, 11, 0.3);
     }
 
     /* Absent */
-    .toggle-btn.absent:has(input:checked) {
-        background: rgba(239, 68, 68, 0.2);
+    .toggle-btn.absent:hover {
         color: #ef4444;
-        box-shadow: 0 0 0 1px #ef4444;
+        background: rgba(239, 68, 68, 0.05);
     }
 
-    /* Hover effects */
-    .toggle-btn:hover {
+    .toggle-btn.absent:has(input:checked) {
+        background: #ef4444;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
+    }
+
+    .stat-pill {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .hover-bg:hover {
         background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .student-row:hover {
+        background: rgba(255, 255, 255, 0.02) !important;
     }
 </style>
 {% endif %}
