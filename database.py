@@ -68,6 +68,7 @@ class Attendance(db.Model):
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False)
     date = db.Column(db.String(20), nullable=False, default=lambda: datetime.now().strftime('%Y-%m-%d'))
     status = db.Column(db.String(20), nullable=False) # Present, Absent, Late
+    remarks = db.Column(db.Text, nullable=True)
 
 class LedgerTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)

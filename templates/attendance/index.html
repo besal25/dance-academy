@@ -48,21 +48,22 @@
             <div style="display: flex; gap: 0.5rem;">
                 <!-- Date Navigation logic would require JS with Nepali Date converter, kept simple for now as manual input is standard -->
                 <!-- Ideally, we'd add < > arrows if we had a reliable BS date addition library in JS -->
-                <div class="input-group" style="flex: 1;">
-                    <span class="input-icon"><i class="fas fa-calendar-alt"></i></span>
+                <div class="input-group" style="display: flex; gap: 0;">
+                    <span class="input-icon" style="border-right: none; border-radius: 8px 0 0 8px;"><i
+                            class="fas fa-calendar-alt"></i></span>
                     <input type="text" name="date" class="nepali-date-picker" value="{{ date }}"
                         placeholder="YYYY-MM-DD"
-                        style="width: 100%; padding: 0.8rem; background: transparent; border: none; color: var(--text-main); outline: none;">
+                        style="flex: 1; padding: 0.8rem; background: transparent; border: none; color: var(--text-main); outline: none;">
+                    <button type="submit" class="btn-secondary"
+                        style="background: rgba(255,255,255,0.1); border-radius: 0 8px 8px 0; border: none; padding: 0 1.5rem; height: auto;">
+                        Go
+                    </button>
                 </div>
-                <button type="submit" class="btn-secondary" style="background: rgba(255,255,255,0.05);">
-                    Go
-                </button>
             </div>
-        </div>
 
-        <div>
-            <!-- Empty placeholder aligned with grid -->
-        </div>
+            <div>
+                <!-- Empty placeholder aligned with grid -->
+            </div>
     </form>
 </div>
 
@@ -156,11 +157,9 @@
                             </div>
                         </td>
                         <td style="padding: 0.8rem 1rem;">
-                            <!-- Adding a subtle note here to fill space, or could be an input -->
-                            <div style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; transition: all 0.2s;"
-                                class="hover-bg">
-                                <i class="far fa-comment-dots"></i>
-                            </div>
+                            <input type="text" name="remarks_{{ student.id }}"
+                                value="{{ student.attendance_remarks|default('') }}" placeholder="Add note..."
+                                style="width: 100%; max-width: 200px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text-main); outline: none;">
                         </td>
                     </tr>
                     {% else %}

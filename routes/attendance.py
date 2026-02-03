@@ -42,12 +42,14 @@ def index():
                 
                 # Fetch existing attendance for this date
                 existing_records = Attendance.query.filter_by(class_id=selected_class.id, date=date).all()
-                attendance_map = {r.student_id: r.status for r in existing_records}
+                attendance_map = {r.student_id: {'status': r.status, 'remarks': r.remarks} for r in existing_records}
                 
                 # Build list of student objects with their status
                 for enroll in enrollments:
                     s = enroll.student
-                    s.attendance_status = attendance_map.get(s.id, 'Absent')
+                    record = attendance_map.get(s.id, {})
+                    s.attendance_status = record.get('status', 'Absent')
+                    s.attendance_remarks = record.get('remarks', '')
                     students.append(s)
 
     return render_template('attendance/index.html', classes=classes, selected_class=selected_class, students=students, date=date_str, is_future=is_future)
@@ -76,14 +78,16 @@ def mark():
     for enroll in enrollments:
         student_id = enroll.student.id
         status = request.form.get(f'status_{student_id}')
+        remarks = request.form.get(f'remarks_{student_id}')
         
         if status:
             # Check if exists
             record = Attendance.query.filter_by(class_id=class_id, student_id=student_id, date=date).first()
             if record:
                 record.status = status
+                record.remarks = remarks
             else:
-                new_record = Attendance(class_id=class_id, student_id=student_id, date=date, status=status)
+                new_record = Attendance(class_id=class_id, student_id=student_id, date=date, status=status, remarks=remarks)
                 db.session.add(new_record)
     
     db.session.commit()
