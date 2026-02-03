@@ -29,7 +29,45 @@ def add_instructor():
         return redirect(url_for('classes.index'))
     
     specialty = request.form['specialty']
-    new_instructor = Instructor(name=name, phone=clean_phone, specialty=specialty)
+    citizenship_no = request.form.get('citizenship_no')
+    
+    # Handle File Uploads
+    from werkzeug.utils import secure_filename
+    import os
+    from datetime import datetime
+    
+    photo_path = None
+    document_path = None
+    
+    if 'photo' in request.files:
+        file = request.files['photo']
+        if file and file.filename != '':
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = secure_filename(f"{name}_{timestamp}_{file.filename}")
+            # Ensure directory exists
+            upload_folder = os.path.join('static', 'uploads', 'instructors')
+            os.makedirs(upload_folder, exist_ok=True)
+            file.save(os.path.join(upload_folder, filename))
+            photo_path = f"uploads/instructors/{filename}"
+
+    if 'document' in request.files:
+        file = request.files['document']
+        if file and file.filename != '':
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = secure_filename(f"{name}_doc_{timestamp}_{file.filename}")
+            upload_folder = os.path.join('static', 'uploads', 'instructors')
+            os.makedirs(upload_folder, exist_ok=True)
+            file.save(os.path.join(upload_folder, filename))
+            document_path = f"uploads/instructors/{filename}"
+
+    new_instructor = Instructor(
+        name=name, 
+        phone=clean_phone, 
+        specialty=specialty,
+        citizenship_no=citizenship_no,
+        photo_path=photo_path,
+        document_path=document_path
+    )
     db.session.add(new_instructor)
     db.session.commit()
     flash('Instructor added successfully!')

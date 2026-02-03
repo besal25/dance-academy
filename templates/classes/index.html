@@ -157,10 +157,25 @@
 
             <!-- Add Instructor Form -->
             <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Add Instructor</h3>
-            <form action="{{ url_for('classes.add_instructor') }}" method="post" style="display: grid; gap: 0.8rem;">
+            <form action="{{ url_for('classes.add_instructor') }}" method="post" enctype="multipart/form-data"
+                style="display: grid; gap: 0.8rem;">
                 <input type="text" name="name" placeholder="Name" required>
                 <input type="text" name="phone" placeholder="Phone" required>
                 <input type="text" name="specialty" placeholder="Specialty (e.g., Ballet)">
+                <input type="text" name="citizenship_no" placeholder="Citizenship No">
+
+                <div style="font-size: 0.8rem;">
+                    <label style="color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Photo
+                        (Optional)</label>
+                    <input type="file" name="photo" accept="image/*" style="padding: 0.5rem;">
+                </div>
+
+                <div style="font-size: 0.8rem;">
+                    <label style="color: var(--text-muted); display: block; margin-bottom: 0.2rem;">Documents
+                        (Optional)</label>
+                    <input type="file" name="document" style="padding: 0.5rem;">
+                </div>
+
                 <button type="submit" class="btn-primary" style="font-size: 0.9rem;">Add Instructor</button>
             </form>
         </div>

@@ -41,6 +41,11 @@ class Instructor(db.Model):
     specialty = db.Column(db.String(50), nullable=True)
     
     classes = db.relationship('Class', backref='instructor', lazy=True)
+    
+    # New Fields
+    photo_path = db.Column(db.String(200), nullable=True)
+    citizenship_no = db.Column(db.String(50), nullable=True)
+    document_path = db.Column(db.String(200), nullable=True)
 
 class Class(db.Model):
     id = db.Column(db.Integer, primary_key=True)
