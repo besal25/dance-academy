@@ -10,9 +10,19 @@
         <p style="color: var(--text-muted); margin: 0;">Special long-term memberships with discounted rates</p>
     </div>
     {% if current_user.role == 'Admin' %}
-    <a href="{{ url_for('packages.add') }}" class="btn-primary">
-        <i class="fas fa-plus"></i> Create Package
-    </a>
+    <div style="display: flex; gap: 0.5rem;">
+        <form method="post" action="{{ url_for('packages.delete_all') }}" style="display: inline;"
+            onsubmit="return confirm('⚠️ DANGER: This will permanently delete ALL packages and ALL active enrollment records.\n\nType DELETE in the next prompt to confirm.') && prompt('Type DELETE to confirm:') === 'DELETE';">
+            <button type="submit" class="btn-icon"
+                style="background: #dc2626; color: white; padding: 0.8rem 1.2rem; border-radius: 8px; width: auto; height: auto; text-decoration: none;"
+                title="Delete All Packages">
+                <i class="fas fa-trash-alt"></i> Delete All
+            </button>
+        </form>
+        <a href="{{ url_for('packages.add') }}" class="btn-primary">
+            <i class="fas fa-plus"></i> Create Package
+        </a>
+    </div>
     {% endif %}
 </div>
 

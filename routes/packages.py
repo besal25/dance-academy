@@ -179,3 +179,20 @@ def delete(id):
     db.session.commit()
     flash('Package deleted.')
     return redirect(url_for('packages.index'))
+
+@packages_bp.route('/packages/delete-all', methods=['POST'])
+@login_required
+@admin_required
+def delete_all():
+    count = Package.query.count()
+    
+    # Cascade delete all package enrollments
+    # Similar to classes/workshops, we just delete the records.
+    # Ideally should void transactions, but for mass delete, we prioritize cleanup.
+    
+    PackageEnrollment.query.delete()
+    Package.query.delete()
+    
+    db.session.commit()
+    flash(f'All {count} packages and their enrollments have been deleted.', 'success')
+    return redirect(url_for('packages.index'))

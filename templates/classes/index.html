@@ -11,6 +11,20 @@
             <h2 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">Active
                 Classes</h2>
 
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span style="color: var(--text-muted);">Manage your weekly class schedule</span>
+                {% if current_user.role == 'Admin' %}
+                <form method="post" action="{{ url_for('classes.delete_all') }}" style="display: inline;"
+                    onsubmit="return confirm('⚠️ DANGER: This will permanently delete ALL classes, enrollments, and attendance records.\n\nType DELETE in the next prompt to confirm.') && prompt('Type DELETE to confirm:') === 'DELETE';">
+                    <button type="submit" class="btn-icon"
+                        style="background: #dc2626; color: white; padding: 0.8rem 1.2rem; border-radius: 8px; width: auto; height: auto;"
+                        title="Delete All Classes">
+                        <i class="fas fa-trash-alt"></i> Delete All Classes
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
                 {% for cls in classes %}
                 <div

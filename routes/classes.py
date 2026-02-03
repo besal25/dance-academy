@@ -105,4 +105,23 @@ def unenroll_student(enrollment_id):
     db.session.delete(enrollment)
     db.session.commit()
     flash('Student unenrolled.')
+    db.session.commit()
+    flash('Student unenrolled.')
+    return redirect(url_for('classes.index'))
+
+@class_bp.route('/classes/delete-all', methods=['POST'])
+@login_required
+@admin_required
+def delete_all():
+    from database import Enrollment, Attendance
+    
+    count = Class.query.count()
+    
+    # Cascade delete enrollments and attendance for all classes
+    Enrollment.query.delete()
+    Attendance.query.delete()
+    Class.query.delete()
+    
+    db.session.commit()
+    flash(f'All {count} classes and related records (Enrollments, Attendance) have been deleted.', 'success')
     return redirect(url_for('classes.index'))
