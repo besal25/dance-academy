@@ -31,7 +31,7 @@ A comprehensive web-based management system for dance academies, built with Flas
 - Advance payment support
 - Automatic monthly fee generation
 - **Package Protection**: Prevents double billing when students enroll in packages
-- **Workshop Fee Waiver**: Optional monthly fee waiver during workshop enrollment
+- **Smart Fee Waivers**: Automatically voids regular monthly fees for the *full duration* of Workshops or Packages when enabled
 - Transaction voiding and balance recalculation
 - Payment receipts with print functionality
 - Guest workshop payment tracking
@@ -49,7 +49,10 @@ A comprehensive web-based management system for dance academies, built with Flas
 - Optional monthly fee waiver for enrolled students
 - Delete workshops with enrollment protection
 
-### 🛍️ Inventory & Product Sales
+### 🛍️ Inventory & POS System
+- **Point of Sale (POS)**: Sell items with "Pay Instantly" option
+- **Instant Receipts**: Generate and print transaction-specific receipts
+- **Smart Ledger Integration**: Records purchases and payments instantly without affecting tuition dues
 - Product/clothing inventory management
 - Stock tracking
 - Student-wise sales records
@@ -179,10 +182,10 @@ dance-academy/
 - Voids overlapping monthly fees during package enrollment
 - Smart fee generation skips students with active packages
 
-### Workshop Fee Waiver
-- Optional checkbox during workshop enrollment
-- Automatically voids monthly fee when enabled
-- Provides flexibility in billing for workshop participants
+### Smart Fee Waivers
+- **Problem**: Students paying for full Packages or Workshops shouldn't be charged regular monthly fees.
+- **Solution**: The system checks the *start* and *end* dates of the Package/Workshop.
+- **Action**: Automatically finds and voids any "Monthly Fee" transactions that fall within that duration.
 
 ### Granular Permissions
 - 10 different permission levels for fine-grained access control
