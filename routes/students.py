@@ -73,16 +73,8 @@ def add():
         from routes.finance import add_transaction, calculate_prorata_fee
         
         settings = Settings.query.first()
-        base_admission = settings.default_admission_fee if settings else 1000.0
-        
-        admission_to_charge = 0.0
-        if admission_type == 'Normal':
-            admission_to_charge = base_admission
-        elif admission_type == 'Percentage':
-            admission_to_charge = base_admission * (1 - admission_discount / 100)
-        elif admission_type == 'Fixed':
-            admission_to_charge = admission_custom
-        # Scholarship is 0
+        # Default to 1000 if not provided in form (though form has value="1000")
+        admission_to_charge = float(request.form.get('custom_admission_fee', 1000))
         
         if admission_to_charge > 0:
             add_transaction(new_student.id, description="Admission Fee", debit=admission_to_charge, credit=0, txn_type='FEE')
