@@ -70,7 +70,7 @@ def add():
         
         # Auto-charge admission fee and first month fee
         from database import Settings
-        from routes.finance import add_transaction
+        from routes.finance import add_transaction, calculate_prorata_fee
         
         settings = Settings.query.first()
         base_admission = settings.default_admission_fee if settings else 1000.0
@@ -102,7 +102,13 @@ def add():
         today_bs = nepali_datetime.date.today()
         month_name = today_bs.strftime('%B')
         description = f"Monthly Fee (Enrollment) - {month_name} {today_bs.year}"
-        add_transaction(new_student.id, description=description, debit=fee, credit=0, txn_type='FEE')
+        
+        # Calculate Pro-Rata for initial enrollment
+        # We pass fees and today_bs (which is admission date here)
+        fee_to_charge, suffix = calculate_prorata_fee(fee, today_bs.strftime('%Y-%m-%d'))
+        description += suffix
+        
+        add_transaction(new_student.id, description=description, debit=fee_to_charge, credit=0, txn_type='FEE')
         
         flash('Student added and first month fee charged!')
         return redirect(url_for('students.index'))

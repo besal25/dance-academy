@@ -38,6 +38,46 @@ def add_transaction(student_id, description, debit=0.0, credit=0.0, txn_type='FE
     db.session.commit()
     return new_txn
 
+def get_days_in_bs_month(year, month):
+    """Helper to get days in a Nepali month"""
+    # Try finding the last valid day from 32 down to 29
+    for d in range(32, 28, -1):
+        try:
+            nepali_datetime.date(year, month, d)
+            return d
+        except ValueError:
+            continue
+    return 30 # Fallback
+
+def calculate_prorata_fee(monthly_fee, admission_date_str):
+    """
+    Calculates pro-rata fee if the admission date is in the current month.
+    Returns (amount_to_charge, description_suffix)
+    """
+    if not admission_date_str:
+        return monthly_fee, ""
+        
+    try:
+        today_bs = nepali_datetime.date.today()
+        # Parse admission date
+        adm_parts = [int(p) for p in admission_date_str.split('-')]
+        adm_date = nepali_datetime.date(adm_parts[0], adm_parts[1], adm_parts[2])
+        
+        # Check if joined THIS month/year
+        if adm_date.year == today_bs.year and adm_date.month == today_bs.month:
+            total_days = get_days_in_bs_month(today_bs.year, today_bs.month)
+            days_active = total_days - adm_date.day + 1
+            
+            if days_active < 1: days_active = 1
+            
+            pro_rata_fee = (monthly_fee / total_days) * days_active
+            return round(pro_rata_fee), f" (Pro-Rata: Joined {admission_date_str})"
+            
+    except Exception as e:
+        print(f"Error calculating pro-rata: {e}")
+        
+    return monthly_fee, ""
+
 # --- Routes ---
 @finance_bp.route('/finance')
 @login_required
@@ -147,10 +187,15 @@ def generate_fees():
     
     count = 0
     active_students = Student.query.filter_by(status='Active').all()
+
     for s in active_students:
         description = f"Monthly Fee - {month_name} {today_bs.year}"
         
-        # Check duplicate using substring (Month Year) to catch Enrollment vs standard fees
+        # Calculate Pro-Rata using helper
+        amount_to_charge, suffix = calculate_prorata_fee(s.custom_monthly_fee, s.last_admission_date)
+        description += suffix
+
+        # Check dupes using substring (Month Year) to catch Enrollment vs standard fees
         search_term = f"{month_name} {today_bs.year}"
         exists = LedgerTransaction.query.filter(
             LedgerTransaction.student_id == s.id,
@@ -169,7 +214,7 @@ def generate_fees():
             ).first()
             
             if not active_package:
-                add_transaction(s.id, description=description, debit=s.custom_monthly_fee, credit=0, txn_type='FEE')
+                add_transaction(s.id, description=description, debit=amount_to_charge, credit=0, txn_type='FEE')
                 count += 1
             
     flash(f"Generated fees for {count} active students ({month_name}).")
