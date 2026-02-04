@@ -125,27 +125,40 @@ def enroll(id):
             add_transaction(student_id, description=f"Payment for Package: {package.name}", debit=0, credit=amount_paid, txn_type='PAYMENT')
             
         # --- Package Fee Adjustment ---
-        # Void any monthly fees for the same month the package starts
-        search_month = start_date.strftime('%B')
-        search_year = start_date.year
-        search_pattern = f"%Monthly Fee% - {search_month} {search_year}"
-        
-        overlapping_fees = LedgerTransaction.query.filter(
-            LedgerTransaction.student_id == student_id,
-            LedgerTransaction.description.like(search_pattern),
-            LedgerTransaction.is_void == False,
-            LedgerTransaction.txn_type == 'FEE'
-        ).all()
-        
-        void_count = 0
-        for fee in overlapping_fees:
-            fee.is_void = True
-            void_count += 1
+        if request.form.get('skip_monthly') == 'yes':
+            void_count = 0
+            # Loop through each month of the package duration
+            for i in range(package.duration_months):
+                # Calculate target month/year
+                # Add i months to start_date
+                target_month_idx = start_date.month + i
+                target_year = start_date.year + (target_month_idx - 1) // 12
+                target_month_num = (target_month_idx - 1) % 12 + 1
+                
+                # Get Month Name from nepali_datetime might be tricky if not built-in for number->name
+                # Let's rely on constructing a date and getting strftime
+                # We need a valid day (1 is safe)
+                target_date = nepali_datetime.date(target_year, target_month_num, 1)
+                search_month = target_date.strftime('%B')
+                search_year = target_date.year
+                
+                search_pattern = f"%Monthly Fee% - {search_month} {search_year}"
+                
+                overlapping_fees = LedgerTransaction.query.filter(
+                    LedgerTransaction.student_id == student_id,
+                    LedgerTransaction.description.like(search_pattern),
+                    LedgerTransaction.is_void == False,
+                    LedgerTransaction.txn_type == 'FEE'
+                ).all()
+                
+                for fee in overlapping_fees:
+                    fee.is_void = True
+                    void_count += 1
             
-        if void_count > 0:
-            from routes.finance import recalculate_balances
-            recalculate_balances(student_id)
-            flash(f"Automatically removed {void_count} overlapping monthly fees for {search_month}.")
+            if void_count > 0:
+                from routes.finance import recalculate_balances
+                recalculate_balances(student_id)
+                flash(f"Automatically waived {void_count} overlapping monthly fees for package duration.")
 
         db.session.commit()
         flash('Package enrollment successful!')

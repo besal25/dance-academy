@@ -76,13 +76,46 @@ def sell():
         product.stock -= quantity
         
         # Charge student ledger
-        add_transaction(student_id, description=f"Purchase: {product.name} (Qty: {quantity})", debit=price_sold, credit=0, txn_type='FEE')
+        description_debit = f"Purchase: {product.name} (Qty: {quantity})"
+        debit_txn = add_transaction(student_id, description=description_debit, debit=price_sold, credit=0, txn_type='FEE')
+        
+        # Handle Immediate Payment
+        pay_now = request.form.get('pay_now') == 'on'
+        credit_txn = None
+        if pay_now:
+            amount_paid = float(request.form.get('amount_paid', price_sold))
+            description_credit = f"Payment for {product.name}"
+            credit_txn = add_transaction(student_id, description=description_credit, debit=0, credit=amount_paid, txn_type='PAYMENT')
         
         db.session.commit()
+        
         flash(f'Sold {quantity} {product.name} to student.')
+        
+        # Redirect to receipt if paid now or generic receipt requested
+        if pay_now:
+             return redirect(url_for('inventory.view_receipt', sale_id=sale.id, txn_id=debit_txn.id))
+             
         return redirect(url_for('inventory.index'))
         
     return render_template('inventory/sell.html', products=products, students=students)
+
+@inventory_bp.route('/inventory/receipt/<int:sale_id>')
+@login_required
+def view_receipt(sale_id):
+    sale = ProductSale.query.get_or_404(sale_id)
+    student = Student.query.get(sale.student_id)
+    product = Product.query.get(sale.product_id)
+    
+    # Check for linked payment (heuristic: same date, same amount, credit txn)
+    # Ideally link them via key, but for now we search for recent credit txn
+    payment_txn = LedgerTransaction.query.filter_by(
+        student_id=student.id, 
+        credit=sale.price_sold, 
+        date=sale.date,
+        txn_type='PAYMENT'
+    ).order_by(LedgerTransaction.id.desc()).first()
+    
+    return render_template('inventory/receipt.html', sale=sale, student=student, product=product, payment=payment_txn)
 
 @inventory_bp.route('/inventory/delete/<int:id>')
 @login_required

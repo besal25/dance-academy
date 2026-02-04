@@ -111,6 +111,26 @@
                 </div>
             </div>
 
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
+                <label
+                    style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 500; margin-bottom: 0.5rem;">
+                    <span><i class="fas fa-hand-holding-usd" style="color: #34d399; margin-right: 0.5rem;"></i> Pay
+                        Instantly?</span>
+                    <input type="checkbox" name="pay_now" id="pay_now" onchange="togglePayNow()" checked
+                        style="width: 1.2rem; height: 1.2rem;">
+                </label>
+
+                <div id="pay_now_container"
+                    style="background: rgba(52, 211, 153, 0.1); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(52, 211, 153, 0.2);">
+                    <label
+                        style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Amount
+                        Paid (Rs)</label>
+                    <input type="number" name="amount_paid" id="amount_paid"
+                        style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: rgba(0,0,0,0.2); color: white; font-weight: 600;"
+                        onclick="this.select()">
+                </div>
+            </div>
+
             <div
                 style="margin-top: 2rem; padding-top: 1rem; border-top: 2px dashed var(--border); display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 1.1rem; font-weight: 600;">TOTAL</span>
@@ -149,6 +169,19 @@
         }
 
         updateReceipt();
+    }
+
+    function togglePayNow() {
+        const checkbox = document.getElementById('pay_now');
+        const container = document.getElementById('pay_now_container');
+        container.style.opacity = checkbox.checked ? '1' : '0.5';
+        container.style.pointerEvents = checkbox.checked ? 'auto' : 'none';
+
+        // Auto update amount input to match total if checked
+        if (checkbox.checked) {
+            const finalPrice = document.getElementById('final_price_input').value;
+            document.getElementById('amount_paid').value = finalPrice;
+        }
     }
 
     function updateReceipt() {
@@ -212,6 +245,11 @@
         // Final Total
         rTotal.innerText = "Rs " + Math.round(total).toLocaleString();
         finalInput.value = Math.round(total);
+
+        // Update Pay Now amount if it hasn't been manually edited (simple logic: just always sync for now for ease)
+        if (document.getElementById('pay_now').checked) {
+            document.getElementById('amount_paid').value = Math.round(total);
+        }
     }
 </script>
 

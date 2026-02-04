@@ -1,0 +1,136 @@
+{% extends "layout.html" %}
+
+{% block title %}Receipt #{{ sale.id }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 2rem auto; display: flex; flex-direction: column; gap: 2rem;">
+
+    <!-- Print Action -->
+    <div class="no-print" style="text-align: right;">
+        <button onclick="window.print()" class="btn-primary" style="padding: 0.5rem 1.5rem;">
+            <i class="fas fa-print"></i> Print Receipt
+        </button>
+        <a href="{{ url_for('inventory.sell') }}" class="btn-secondary" style="margin-left: 1rem;">
+            New Sale
+        </a>
+    </div>
+
+    <!-- Receipt Card -->
+    <div class="glass-card" id="receipt-area"
+        style="background: white; color: #1f2937; padding: 3rem; border-radius: 0; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1.5rem;">
+            <h1 style="margin: 0; font-size: 1.8rem; color: #111827; letter-spacing: -0.5px;">DANCE ACADEMY</h1>
+            <p style="margin: 0.5rem 0 0; color: #6b7280; font-size: 0.9rem;">Kathmandu, Nepal | +977-9800000000</p>
+            <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">Receipt #INV-{{ sale.id }}</p>
+        </div>
+
+        <!-- Info Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; font-size: 0.95rem;">
+            <div>
+                <p style="margin: 0; font-weight: 600; color: #4b5563; text-transform: uppercase; font-size: 0.75rem;">
+                    Bill To</p>
+                <p style="margin: 0.3rem 0 0; font-weight: 700; font-size: 1.1rem; color: #111827;">{{ student.name }}
+                </p>
+                <p style="margin: 0; color: #4b5563;">{{ student.phone }}</p>
+            </div>
+            <div style="text-align: right;">
+                <p style="margin: 0; font-weight: 600; color: #4b5563; text-transform: uppercase; font-size: 0.75rem;">
+                    Date</p>
+                <p style="margin: 0.3rem 0 0; color: #111827;">{{ sale.date }}</p>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+            <thead>
+                <tr style="border-bottom: 2px solid #e5e7eb;">
+                    <th style="text-align: left; padding: 0.8rem 0; color: #4b5563; font-weight: 600;">Item</th>
+                    <th style="text-align: center; padding: 0.8rem 0; color: #4b5563; font-weight: 600;">Qty</th>
+                    <th style="text-align: right; padding: 0.8rem 0; color: #4b5563; font-weight: 600;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid #f3f4f6;">
+                    <td style="padding: 1rem 0; color: #111827;">{{ product.name }}</td>
+                    <td style="text-align: center; padding: 1rem 0; color: #111827;">{{ sale.quantity }}</td>
+                    <td style="text-align: right; padding: 1rem 0; color: #111827;">Rs {{ sale.price_sold }}</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="text-align: right; padding-top: 1.5rem; font-weight: 600; color: #4b5563;">
+                        Total Amount</td>
+                    <td
+                        style="text-align: right; padding-top: 1.5rem; font-weight: 700; color: #111827; font-size: 1.1rem;">
+                        Rs {{ sale.price_sold }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: right; padding-top: 0.5rem; font-weight: 600; color: #4b5563;">
+                        Paid Immediately</td>
+                    <td style="text-align: right; padding-top: 0.5rem; font-weight: 600; color: #059669;">
+                        {% if payment %}
+                        Rs {{ payment.credit }}
+                        {% else %}
+                        Rs 0
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: right; padding-top: 0.5rem; font-weight: 600; color: #4b5563;">
+                        Balance Due (This Bill)</td>
+                    <td style="text-align: right; padding-top: 0.5rem; font-weight: 600; color: #dc2626;">
+                        {% if payment %}
+                        Rs {{ (sale.price_sold - payment.credit)|round(2) }}
+                        {% else %}
+                        Rs {{ sale.price_sold }}
+                        {% endif %}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 3rem; color: #9ca3af; font-size: 0.8rem;">
+            <p>Thank you for your business!</p>
+            <p style="margin-top: 0.3rem;">This is a computer-generated receipt.</p>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+
+        #receipt-area,
+        #receipt-area * {
+            visibility: visible;
+        }
+
+        #receipt-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        /* Ensure background colors print */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    }
+</style>
+{% endblock %}

@@ -86,31 +86,56 @@ def enroll(id):
             if amount_paid > 0:
                 add_transaction(student_id, description=f"Payment for Workshop: {workshop.name}", debit=0, credit=amount_paid, txn_type='PAYMENT')
             
-            # --- Monthly Fee Waiver Logic ---
+            # --- Smart Monthly Fee Waiver Logic ---
             if request.form.get('skip_monthly') == 'yes':
-                # Determine current Nepali Month/Year
-                today_bs_date = nepali_datetime.date.today()
-                month_name = today_bs_date.strftime("%B")
-                year = today_bs_date.year
-                
-                search_pattern = f"%Monthly Fee% - {month_name} {year}"
-                
-                overlapping_fees = LedgerTransaction.query.filter(
-                    LedgerTransaction.student_id == student_id,
-                    LedgerTransaction.description.like(search_pattern),
-                    LedgerTransaction.is_void == False,
-                    LedgerTransaction.txn_type == 'FEE'
-                ).all()
-                
-                void_count = 0
-                for fee in overlapping_fees:
-                    fee.is_void = True
-                    void_count += 1
-                
-                if void_count > 0:
-                    from routes.finance import recalculate_balances
-                    recalculate_balances(student_id)
-                    flash(f"Automatically waived {void_count} regular monthly fees for {month_name}.")
+                try:
+                    # Parse start and end dates
+                    s_parts = [int(x) for x in workshop.start_date.split('-')]
+                    e_parts = [int(x) for x in workshop.end_date.split('-')]
+                    
+                    s_date = nepali_datetime.date(s_parts[0], s_parts[1], s_parts[2])
+                    e_date = nepali_datetime.date(e_parts[0], e_parts[1], e_parts[2])
+                    
+                    # Iterate through months from start to end
+                    # Simple iteration: Start at s_date, increment month until > e_date
+                    curr_date = nepali_datetime.date(s_date.year, s_date.month, 1)
+                    end_month_date = nepali_datetime.date(e_date.year, e_date.month, 1)
+                    
+                    void_count = 0
+                    
+                    while curr_date <= end_month_date:
+                        month_name = curr_date.strftime("%B")
+                        year = curr_date.year
+                        
+                        search_pattern = f"%Monthly Fee% - {month_name} {year}"
+                        
+                        overlapping_fees = LedgerTransaction.query.filter(
+                            LedgerTransaction.student_id == student_id,
+                            LedgerTransaction.description.like(search_pattern),
+                            LedgerTransaction.is_void == False,
+                            LedgerTransaction.txn_type == 'FEE'
+                        ).all()
+                        
+                        for fee in overlapping_fees:
+                            fee.is_void = True
+                            void_count += 1
+                        
+                        # Move to next month
+                        next_month = curr_date.month + 1
+                        next_year = curr_date.year
+                        if next_month > 12:
+                            next_month = 1
+                            next_year += 1
+                        curr_date = nepali_datetime.date(next_year, next_month, 1)
+                        
+                    if void_count > 0:
+                        from routes.finance import recalculate_balances
+                        recalculate_balances(student_id)
+                        flash(f"Automatically waived {void_count} monthly fees for workshop duration.")
+                        
+                except Exception as e:
+                    print(f"Error in waiver logic: {e}")
+                    flash("Could not calculate fee waiver duration automatically.", "warning")
         
         db.session.commit()
         flash('Enrollment successful!')
