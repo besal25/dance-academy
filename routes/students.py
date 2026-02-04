@@ -161,8 +161,6 @@ def edit(id):
                 student.last_admission_date = today_bs.strftime('%Y-%m-%d')
             
             if request.form.get('charge_readmission') == 'yes':
-            
-            if request.form.get('charge_readmission') == 'yes':
                 from database import Settings
                 from routes.finance import add_transaction
                 settings = Settings.query.first()
