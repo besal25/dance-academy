@@ -49,9 +49,15 @@
                         <div
                             style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 600;">{{ cls.name }}</h3>
+                            <button
+                                onclick='openEditClassModal({{ cls.id }}, {{ cls.name|tojson }}, {{ cls.instructor_id if cls.instructor_id else "null" }}, {{ cls.capacity if cls.capacity else "null" }}, {{ cls.schedule|tojson }})'
+                                class="btn-icon" style="width: 32px; height: 32px; margin-right: 0.5rem;"
+                                title="Edit Details">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
                             <button onclick='openManageClassModal({{ cls.id|tojson }}, {{ cls.name|tojson }})'
-                                class="btn-icon" style="width: 32px; height: 32px;" title="Manage Class">
-                                <i class="fas fa-cog"></i>
+                                class="btn-icon" style="width: 32px; height: 32px;" title="Manage Enrollments">
+                                <i class="fas fa-users-cog"></i>
                             </button>
                         </div>
                         <div
@@ -192,9 +198,52 @@
                 </div>
             </div>
 
-            <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Schedule</label>
-                <input type="text" name="schedule" placeholder="e.g. Mon, Wed 5PM - 6PM" required>
+            <div
+                style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px dashed var(--border);">
+                <label style="display: block; margin-bottom: 0.8rem; color: var(--primary); font-weight: 500;">Class
+                    Schedule</label>
+
+                <!-- 1. Start Date -->
+                <div style="margin-bottom: 1rem;">
+                    <label
+                        style="display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--text-muted);">Start
+                        Date (BS)</label>
+                    <input type="text" id="new-class-start-date" class="nepali-date-picker" placeholder="YYYY-MM-DD"
+                        required>
+                </div>
+
+                <!-- 2. Time -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label
+                            style="display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--text-muted);">Start
+                            Time</label>
+                        <input type="time" id="new-class-start-time" required>
+                    </div>
+                    <div>
+                        <label
+                            style="display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--text-muted);">End
+                            Time</label>
+                        <input type="time" id="new-class-end-time" required>
+                    </div>
+                </div>
+
+                <!-- 3. Days -->
+                <div>
+                    <label
+                        style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">Days</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.8rem;">
+                        {% for day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] %}
+                        <label
+                            style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.9rem; cursor: pointer;">
+                            <input type="checkbox" class="day-checkbox" value="{{ day }}"> {{ day }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Hidden inputs for final storage -->
+                <input type="hidden" name="schedule" id="real-schedule-input">
             </div>
 
             <button type="submit" class="btn-primary" style="margin-top: 0.5rem;">Create Class</button>
@@ -343,6 +392,86 @@
     </div>
 </div>
 
+<!-- 5. Edit Class Modal -->
+<div id="edit-class-modal" class="modal-overlay" style="display: none;"
+    onclick="if(event.target == this) closeModals()">
+    <div class="glass-card" style="width: 500px; max-width: 90%; background: var(--bg-card);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0;">Edit Class</h3>
+            <button onclick="closeModals()" class="btn-icon" style="border: none;"><i class="fas fa-times"></i></button>
+        </div>
+
+        <form id="edit-class-form" method="post" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Class Name</label>
+                <input type="text" name="name" id="edit-class-name" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Instructor</label>
+                    <select name="instructor_id" id="edit-class-instructor">
+                        <option value="">-- Select --</option>
+                        {% for inst in instructors %}
+                        <option value="{{ inst.id }}">{{ inst.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Capacity</label>
+                    <input type="number" name="capacity" id="edit-class-capacity" placeholder="Optional">
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Schedule</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" name="schedule" id="edit-class-schedule" required style="flex: 1;">
+                    <button type="button" class="btn-icon"
+                        onclick="document.getElementById('edit-sched-builder').style.display = 'block'"
+                        title="Open Schedule Builder">
+                        <i class="fas fa-calendar-alt"></i>
+                    </button>
+                </div>
+
+                <!-- Schedule Builder (Hidden by default) -->
+                <div id="edit-sched-builder"
+                    style="display: none; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px dashed var(--border); margin-top: 1rem;">
+                    <label
+                        style="display: block; margin-bottom: 0.8rem; color: var(--primary); font-weight: 500;">Overwrite
+                        Schedule</label>
+
+                    <div style="margin-bottom: 1rem;">
+                        <input type="text" id="edit-class-start-date" class="nepali-date-picker"
+                            placeholder="Start Date (BS)">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div><input type="time" id="edit-class-start-time"></div>
+                        <div><input type="time" id="edit-class-end-time"></div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.8rem;">
+                            {% for day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] %}
+                            <label
+                                style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.9rem; cursor: pointer;">
+                                <input type="checkbox" class="edit-day-checkbox" value="{{ day }}"> {{ day }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-primary" style="width: 100%; font-size: 0.9rem; padding: 0.5rem;"
+                        onclick="applyEditSchedule()">Apply to Text Field</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary" style="margin-top: 0.5rem;">Save Changes</button>
+        </form>
+    </div>
+</div>
+
 <script>
     // General Modal Closer
     function closeModals() {
@@ -359,6 +488,42 @@
     function openAddInstructorModal() {
         closeModals();
         document.getElementById('add-instructor-modal').style.display = 'flex';
+    }
+
+    // Edit Class Modal
+    function openEditClassModal(id, name, instructorId, capacity, schedule) {
+        closeModals();
+        document.getElementById('edit-class-form').action = "/classes/edit/" + id;
+        document.getElementById('edit-class-name').value = name;
+        document.getElementById('edit-class-instructor').value = instructorId || "";
+        document.getElementById('edit-class-capacity').value = capacity || "";
+        document.getElementById('edit-class-schedule').value = schedule;
+
+        // Reset builder
+        document.getElementById('edit-sched-builder').style.display = 'none';
+
+        document.getElementById('edit-class-modal').style.display = 'flex';
+    }
+
+    // Apply Builder Logic for Edit
+    function applyEditSchedule() {
+        const startDate = document.getElementById('edit-class-start-date').value;
+        const startTime = document.getElementById('edit-class-start-time').value;
+        const endTime = document.getElementById('edit-class-end-time').value;
+
+        const days = Array.from(document.querySelectorAll('.edit-day-checkbox:checked'))
+            .map(cb => cb.value)
+            .join(', ');
+
+        let scheduleStr = "";
+        if (days) scheduleStr += days + " ";
+        if (startTime && endTime) {
+            scheduleStr += startTime + " - " + endTime;
+        }
+        if (startDate) scheduleStr += " | Starts " + startDate;
+
+        document.getElementById('edit-class-schedule').value = scheduleStr;
+        document.getElementById('edit-sched-builder').style.display = 'none';
     }
 
     // Manage Class Modal
@@ -435,6 +600,27 @@
 
     document.addEventListener('keydown', function (event) {
         if (event.key === "Escape") closeModals();
+    });
+
+    // Handle Add Class Form Submit
+    document.querySelector('#add-class-modal form').addEventListener('submit', function (e) {
+        // We let the form submit naturally, but first we populate the hidden schedule input
+        const startDate = document.getElementById('new-class-start-date').value;
+        const startTime = document.getElementById('new-class-start-time').value;
+        const endTime = document.getElementById('new-class-end-time').value;
+
+        const days = Array.from(document.querySelectorAll('.day-checkbox:checked'))
+            .map(cb => cb.value)
+            .join(', ');
+
+        let scheduleStr = "";
+        if (days) scheduleStr += days + " ";
+        if (startTime && endTime) {
+            scheduleStr += startTime + " - " + endTime;
+        }
+        if (startDate) scheduleStr += " | Starts " + startDate;
+
+        document.getElementById('real-schedule-input').value = scheduleStr;
     });
 </script>
 {% endblock %}

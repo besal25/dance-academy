@@ -117,8 +117,22 @@ def pay(student_id):
 @permission_required('can_manage_students') # Allows staff to see bills/payments
 def student_ledger(student_id):
     student = Student.query.get_or_404(student_id)
-    transactions = LedgerTransaction.query.filter_by(student_id=student.id).order_by(LedgerTransaction.date.desc()).all()
-    return render_template('finance/ledger.html', student=student, transactions=transactions)
+    
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
+    query = LedgerTransaction.query.filter_by(student_id=student.id)
+    
+    if start_date:
+        query = query.filter(LedgerTransaction.date >= start_date)
+    if end_date:
+        query = query.filter(LedgerTransaction.date <= end_date)
+        
+    transactions = query.order_by(LedgerTransaction.date.desc()).all()
+    
+    import nepali_datetime
+    today_bs = nepali_datetime.date.today()
+    return render_template('finance/ledger.html', student=student, transactions=transactions, start_date=start_date, end_date=end_date, current_year_bs=today_bs.year)
 
 @finance_bp.route('/finance/generate', methods=['POST'])
 @login_required

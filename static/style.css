@@ -311,7 +311,7 @@ input:focus {
     border: none;
     background: transparent;
     width: 100%;
-    color: white;
+    color: var(--text-main);
 }
 
 .search-results {

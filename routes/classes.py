@@ -93,6 +93,26 @@ def add_class():
     flash('Class created successfully!')
     return redirect(url_for('classes.index'))
 
+@class_bp.route('/classes/edit/<int:id>', methods=['POST'])
+@login_required
+@permission_required('can_manage_classes')
+def edit_class(id):
+    cls = Class.query.get_or_404(id)
+    cls.name = request.form['name']
+    
+    # Handle optional fields
+    instructor_id = request.form.get('instructor_id')
+    cls.instructor_id = instructor_id if instructor_id else None
+    
+    cls.schedule = request.form['schedule']
+    
+    capacity = request.form.get('capacity')
+    cls.capacity = int(capacity) if capacity else None
+    
+    db.session.commit()
+    flash('Class updated successfully!')
+    return redirect(url_for('classes.index'))
+
 @class_bp.route('/classes/delete/<int:id>')
 @login_required
 def delete_class(id):

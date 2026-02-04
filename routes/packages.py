@@ -9,6 +9,7 @@ packages_bp = Blueprint('packages', __name__)
 
 @packages_bp.route('/packages')
 @login_required
+@permission_required('can_manage_packages')
 def index():
     packages = Package.query.all()
     # Pass students for the Enrollment Modal
@@ -71,6 +72,7 @@ def edit(id):
 
 @packages_bp.route('/packages/enroll/<int:id>', methods=['GET', 'POST'])
 @login_required
+@permission_required('can_manage_packages')
 def enroll(id):
     package = Package.query.get_or_404(id)
     students = Student.query.filter_by(status='Active').all()
@@ -168,6 +170,7 @@ def enroll(id):
 
 @packages_bp.route('/packages/view/<int:id>')
 @login_required
+@permission_required('can_manage_packages')
 def view(id):
     package = Package.query.get_or_404(id)
     enrollments = PackageEnrollment.query.filter_by(package_id=id).all()

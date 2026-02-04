@@ -9,6 +9,7 @@ workshops_bp = Blueprint('workshops', __name__)
 
 @workshops_bp.route('/workshops')
 @login_required
+@permission_required('can_manage_workshops')
 def index():
     workshops = Workshop.query.order_by(Workshop.start_date.desc()).all()
     return render_template('workshops/index.html', workshops=workshops)
@@ -56,6 +57,7 @@ def edit(id):
 
 @workshops_bp.route('/workshops/enroll/<int:id>', methods=['GET', 'POST'])
 @login_required
+@permission_required('can_manage_workshops')
 def enroll(id):
     workshop = Workshop.query.get_or_404(id)
     students = Student.query.filter_by(status='Active').all()
@@ -145,6 +147,7 @@ def enroll(id):
 
 @workshops_bp.route('/workshops/view/<int:id>')
 @login_required
+@permission_required('can_manage_workshops')
 def view(id):
     workshop = Workshop.query.get_or_404(id)
     enrollments = WorkshopEnrollment.query.filter_by(workshop_id=id).all()

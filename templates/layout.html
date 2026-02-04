@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Nepali DatePicker CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/nepali-datepicker-v4@4.0.1/dist/css/nepali.datepicker.v4.0.1.min.css"
+    <link href="https://cdn.jsdelivr.net/npm/@sajanm/nepali-date-picker@5.0.6/dist/nepali.datepicker.v5.0.6.min.css"
         rel="stylesheet" type="text/css">
 </head>
 
@@ -38,8 +38,17 @@
 
                 {% if current_user.can_manage_classes or current_user.role == 'Admin' %}
                 <li><a href="/classes"><i class="fas fa-chalkboard-teacher"></i> Classes</a></li>
+                {% endif %}
+
+                {% if current_user.can_manage_workshops or current_user.role == 'Admin' %}
                 <li><a href="/workshops"><i class="fas fa-microphone-alt"></i> Workshops</a></li>
+                {% endif %}
+
+                {% if current_user.can_manage_packages or current_user.role == 'Admin' %}
                 <li><a href="/packages"><i class="fas fa-box"></i> Packages</a></li>
+                {% endif %}
+
+                {% if current_user.can_manage_inventory or current_user.role == 'Admin' %}
                 <li><a href="/inventory"><i class="fas fa-tshirt"></i> Clothing & Shop</a></li>
                 {% endif %}
 
@@ -162,7 +171,7 @@
 
     <!-- Nepali DatePicker JS -->
     <script
-        src="https://cdn.jsdelivr.net/npm/nepali-datepicker-v4@4.0.1/dist/js/nepali.datepicker.v4.0.1.min.js"></script>
+        src="https://cdn.jsdelivr.net/npm/@sajanm/nepali-date-picker@5.0.6/dist/nepali.datepicker.v5.0.6.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             function initPickers() {

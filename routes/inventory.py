@@ -9,6 +9,7 @@ inventory_bp = Blueprint('inventory', __name__)
 
 @inventory_bp.route('/inventory')
 @login_required
+@permission_required('can_manage_inventory')
 def index():
     products = Product.query.all()
     sales = ProductSale.query.order_by(ProductSale.date.desc()).limit(20).all()
@@ -46,6 +47,7 @@ def edit(id):
 
 @inventory_bp.route('/inventory/sell', methods=['GET', 'POST'])
 @login_required
+@permission_required('can_manage_inventory')
 def sell():
     products = Product.query.filter(Product.stock > 0).all()
     students = Student.query.filter_by(status='Active').all()
@@ -101,6 +103,7 @@ def sell():
 
 @inventory_bp.route('/inventory/receipt/<int:sale_id>')
 @login_required
+@permission_required('can_manage_inventory')
 def view_receipt(sale_id):
     sale = ProductSale.query.get_or_404(sale_id)
     student = Student.query.get(sale.student_id)

@@ -94,7 +94,8 @@ def index():
                            total_expense=total_expense,
                            net_profit=net_profit,
                            start_date=start_date_str,
-                           end_date=end_date_str)
+                           end_date=end_date_str,
+                           current_year_bs=today_bs.year)
 
 @reports_bp.route('/reports/export/income')
 @login_required

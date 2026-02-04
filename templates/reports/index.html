@@ -15,26 +15,55 @@
         <h2 style="margin: 0; display: flex; align-items: center; gap: 0.8rem; font-size: 1.5rem;">
             <i class="fas fa-chart-pie" style="color: var(--primary);"></i> Reports Center
         </h2>
-        <form action="{{ url_for('reports.index') }}" method="get"
+        <form action="{{ url_for('reports.index') }}" method="get" data-current-year="{{ current_year_bs }}"
             style="display: flex; align-items: center; gap: 1rem;">
             <div
                 style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border);">
                 <i class="fas fa-calendar-alt" style="color: var(--text-muted);"></i>
-                <input type="text" name="start_date" class="nepali-date-picker" value="{{ start_date }}"
+                <input type="text" name="start_date" id="start_date" class="nepali-date-picker" value="{{ start_date }}"
                     placeholder="Start Date"
                     style="border: none; background: transparent; color: var(--text-main); width: 100px; outline: none; font-family: inherit;">
                 <span style="color: var(--text-muted);">-</span>
-                <input type="text" name="end_date" class="nepali-date-picker" value="{{ end_date }}"
+                <input type="text" name="end_date" id="end_date" class="nepali-date-picker" value="{{ end_date }}"
                     placeholder="End Date"
                     style="border: none; background: transparent; color: var(--text-main); width: 100px; outline: none; font-family: inherit;">
             </div>
             <button type="submit" class="btn-primary" style="padding: 0.5rem 1.2rem;">Filter</button>
+            <div style="height: 20px; width: 1px; background: var(--border);"></div>
+            <button type="button" onclick="setPastYear()" class="btn-secondary"
+                style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                Past Year
+            </button>
+            <button type="button" onclick="setThisYear()" class="btn-secondary"
+                style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                This Year
+            </button>
             <a href="{{ url_for('reports.export_income', start_date=start_date, end_date=end_date) }}"
                 class="btn-secondary" title="Export CSV">
                 <i class="fas fa-download"></i>
             </a>
         </form>
     </div>
+
+    <!-- JS for Filter Buttons -->
+    <script>
+        function setPastYear() {
+            const form = document.querySelector('form');
+            const currentYear = parseInt(form.dataset.currentYear);
+            const pastYear = currentYear - 1;
+            document.getElementById('start_date').value = pastYear + "-01-01";
+            document.getElementById('end_date').value = pastYear + "-12-32";
+            form.submit();
+        }
+
+        function setThisYear() {
+            const form = document.querySelector('form');
+            const currentYear = parseInt(form.dataset.currentYear);
+            document.getElementById('start_date').value = currentYear + "-01-01";
+            document.getElementById('end_date').value = currentYear + "-12-32";
+            form.submit();
+        }
+    </script>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; min-height: 0;">
 
