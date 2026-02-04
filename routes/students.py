@@ -63,7 +63,8 @@ def add():
             admission_fee_type=admission_type,
             admission_discount_percent=admission_discount,
             custom_admission_fee=admission_custom,
-            last_admission_date=today_bs
+            custom_admission_fee=admission_custom,
+            last_admission_date=request.form.get('last_admission_date') or today_bs
         )
         db.session.add(new_student)
         db.session.commit()
@@ -139,11 +140,27 @@ def edit(id):
             flash("Error: Monthly fee cannot be negative.", "danger")
             return redirect(url_for('students.edit', id=id))
 
-        # Handle Re-activation (Re-admission)
+        # Handle explicit Admission Date change
+        # If user provides a date, use it. Otherwise keep existing.
+        new_admission_date = request.form.get('last_admission_date')
+        if new_admission_date:
+            student.last_admission_date = new_admission_date
+
+        # Handle Re-activation (Re-admission) logic if Status changed Inactive -> Active
         if old_status == 'Inactive' and student.status == 'Active':
             import nepali_datetime
             today_bs = nepali_datetime.date.today()
-            student.last_admission_date = today_bs.strftime('%Y-%m-%d')
+            
+            # If they didn't manually set a date in this same edit, update to Today for re-admission
+            # But since we now have the field on the form, the 'new_admission_date' above likely captured 
+            # whatever was in the input. If the input was the OLD date, and we want to reset it on activation?
+            # Actually, usually on Re-activation, the user SHOULD update the date manually or we auto-set it if empty.
+            # Let's trust the form value first. If form value was empty (unlikely with required), fallback to today.
+            
+            if not new_admission_date:
+                student.last_admission_date = today_bs.strftime('%Y-%m-%d')
+            
+            if request.form.get('charge_readmission') == 'yes':
             
             if request.form.get('charge_readmission') == 'yes':
                 from database import Settings
