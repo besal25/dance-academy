@@ -58,6 +58,7 @@ def add():
             guardian_name=guardian,
             emergency_contact=emergency,
             custom_monthly_fee=fee,
+            base_monthly_fee=float(request.form.get('base_monthly_fee', 5000)),
             status='Active',
             photo_path=photo_path,
             admission_fee_type=admission_type,
@@ -126,6 +127,7 @@ def edit(id):
         student.guardian_name = request.form.get('guardian_name')
         student.emergency_contact = request.form.get('emergency_contact')
         student.custom_monthly_fee = float(request.form.get('custom_monthly_fee', 5000))
+        student.base_monthly_fee = float(request.form.get('base_monthly_fee', 5000))
         old_status = student.status
         student.status = request.form.get('status', 'Active')
         

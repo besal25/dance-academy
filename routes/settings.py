@@ -26,6 +26,7 @@ def index():
         settings.address = request.form.get('address')
         settings.contact = request.form.get('contact')
         settings.default_admission_fee = float(request.form.get('default_admission_fee', 1000.0))
+        settings.default_monthly_fee = float(request.form.get('default_monthly_fee', 5000.0))
         
         # Handle Logo Upload
         if 'logo' in request.files:

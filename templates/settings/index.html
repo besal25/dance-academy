@@ -50,7 +50,18 @@
             </div>
         </div>
 
-        <!-- Default Admission Fee Removed as per user request (now handled per student) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Default Admission
+                    Fee</label>
+                <input type="number" name="default_admission_fee" value="{{ settings.default_admission_fee }}" step="1">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Default Monthly Fee
+                    (Basic)</label>
+                <input type="number" name="default_monthly_fee" value="{{ settings.default_monthly_fee }}" step="1">
+            </div>
+        </div>
 
         <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
             <button type="submit" class="btn-primary" style="width: 100%;">Save All Changes</button>

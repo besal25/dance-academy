@@ -164,8 +164,10 @@
                         <div style="position: relative;">
                             <span
                                 style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);">Rs</span>
-                            <input type="number" id="base_fee" value="5000" readonly
-                                style="padding-left: 2.5rem; background: rgba(255,255,255,0.05); cursor: not-allowed;">
+                            <input type="number" name="base_monthly_fee" id="base_fee"
+                                value="{{ student.base_monthly_fee if student else site_settings.default_monthly_fee }}"
+                                oninput="calculateMonthlyFee()"
+                                style="padding-left: 2.5rem; background: rgba(255,255,255,0.05);">
                         </div>
                     </div>
 
@@ -198,11 +200,13 @@
 
                 <script>
                     function calculateMonthlyFee() {
-                        const baseFee = 5000;
+                        const baseFeeInput = document.getElementById('base_fee');
                         const discountInput = document.getElementById('discount_percent');
                         const finalFeeInput = document.getElementById('final_fee');
 
+                        let baseFee = parseFloat(baseFeeInput.value) || 0;
                         let discount = parseFloat(discountInput.value) || 0;
+
                         if (discount > 100) discount = 100;
                         if (discount < 0) discount = 0;
 

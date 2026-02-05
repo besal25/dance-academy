@@ -12,7 +12,8 @@ class Student(db.Model):
     guardian_name = db.Column(db.String(100), nullable=True)
     emergency_contact = db.Column(db.String(20), nullable=True)
     status = db.Column(db.String(20), default='Active') # Active, Inactive
-    custom_monthly_fee = db.Column(db.Float, default=5000.0)
+    custom_monthly_fee = db.Column(db.Float, default=5000.0) # Final fee
+    base_monthly_fee = db.Column(db.Float, default=5000.0) # Baseline fee
     photo_path = db.Column(db.String(200), nullable=True)
     
     # Admission Tracking
@@ -118,6 +119,7 @@ class Settings(db.Model):
     contact = db.Column(db.String(50), nullable=True)
     currency = db.Column(db.String(10), default='Rs')
     default_admission_fee = db.Column(db.Float, default=1000.0)
+    default_monthly_fee = db.Column(db.Float, default=5000.0)
 
 class ProgressReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
