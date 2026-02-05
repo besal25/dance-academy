@@ -213,9 +213,8 @@
 </div>
 
 <script>
-    <script>
-        function openStudentModal(id, name, phone, status, dob, guardian, emergency, photoPath, fee, joined) {
-            document.getElementById('modal-name').innerText = name;
+    function openStudentModal(id, name, phone, status, dob, guardian, emergency, photoPath, fee, joined) {
+        document.getElementById('modal-name').innerText = name;
         document.getElementById('modal-phone').innerText = phone;
         document.getElementById('modal-dob').innerText = dob || 'N/A';
         document.getElementById('modal-guardian').innerText = guardian || 'N/A';
@@ -235,17 +234,15 @@
             photoContainer.innerHTML = `<span style="font-size: 2rem; font-weight: 600; color: var(--text-muted);">${name.charAt(0)}</span>`;
         }
 
-
-
         document.getElementById('student-modal').style.display = 'flex';
     }
 
-        function closeStudentModal() {
-            document.getElementById('student-modal').style.display = 'none';
+    function closeStudentModal() {
+        document.getElementById('student-modal').style.display = 'none';
     }
 
-        // Close on escape
-        document.addEventListener('keydown', function (event) {
+    // Close on escape
+    document.addEventListener('keydown', function (event) {
         if (event.key === "Escape") {
             closeStudentModal();
         }

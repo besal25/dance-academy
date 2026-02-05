@@ -63,8 +63,8 @@ def add():
             admission_fee_type=admission_type,
             admission_discount_percent=admission_discount,
             custom_admission_fee=admission_custom,
-            custom_admission_fee=admission_custom,
-            last_admission_date=request.form.get('last_admission_date') or today_bs
+
+            last_admission_date=today_bs
         )
         db.session.add(new_student)
         db.session.commit()
@@ -140,11 +140,7 @@ def edit(id):
             flash("Error: Monthly fee cannot be negative.", "danger")
             return redirect(url_for('students.edit', id=id))
 
-        # Handle explicit Admission Date change
-        # If user provides a date, use it. Otherwise keep existing.
-        new_admission_date = request.form.get('last_admission_date')
-        if new_admission_date:
-            student.last_admission_date = new_admission_date
+
 
         # Handle Re-activation (Re-admission) logic if Status changed Inactive -> Active
         if old_status == 'Inactive' and student.status == 'Active':
