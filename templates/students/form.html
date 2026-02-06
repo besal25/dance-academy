@@ -80,6 +80,14 @@
 
                         <div>
                             <label
+                                style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Admission
+                                Date (BS)</label>
+                            <input type="text" name="last_admission_date" class="nepali-date-picker"
+                                value="{{ student.last_admission_date or '' }}" placeholder="YYYY-MM-DD">
+                        </div>
+
+                        <div>
+                            <label
                                 style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">Status</label>
                             <select name="status" style="width: 100%;">
                                 <option value="Active" {{ 'selected' if student and student.status=='Active'

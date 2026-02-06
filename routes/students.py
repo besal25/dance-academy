@@ -115,6 +115,9 @@ def edit(id):
     student = Student.query.get_or_404(id)
     if request.method == 'POST':
         phone = request.form['phone']
+        new_admission_date = request.form.get('last_admission_date')
+        if new_admission_date == 'None' or not new_admission_date:
+            new_admission_date = None
         
         # 10-digit validation
         clean_phone = ''.join(filter(str.isdigit, phone))
@@ -124,6 +127,7 @@ def edit(id):
         
         student.name = request.form['name']
         student.phone = clean_phone
+        student.last_admission_date = new_admission_date
         student.guardian_name = request.form.get('guardian_name')
         student.emergency_contact = request.form.get('emergency_contact')
         student.custom_monthly_fee = float(request.form.get('custom_monthly_fee', 5000))

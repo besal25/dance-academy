@@ -169,6 +169,29 @@
         </div>
     </div>
 
+    <!-- Chat Widget -->
+    <div id="chat-widget-container">
+        <button id="chat-toggle-btn">
+            <i class="fas fa-comment-dots"></i>
+        </button>
+        <div id="chat-box">
+            <div class="chat-header">
+                <h4>Academy Assistant</h4>
+                <button id="close-chat-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="chat-messages" class="chat-messages">
+                <div class="message bot">Hello! I can help you find students, classes, or instructors. Try "student
+                    [name]" or "list classes".</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+
     <!-- Nepali DatePicker JS -->
     <script
         src="https://cdn.jsdelivr.net/npm/@sajanm/nepali-date-picker@5.0.6/dist/nepali.datepicker.v5.0.6.min.js"></script>
